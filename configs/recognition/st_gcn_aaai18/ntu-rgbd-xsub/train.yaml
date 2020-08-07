@@ -5,7 +5,7 @@ argparse_cfg:
   work_dir:
     bind_to: processor_cfg.work_dir
     help: the dir to save logs and models
-    default: '../drive/My Drive/work_dir'
+    default: ./work_dir/recognition/ST_GCN_18/ntu-rgbd-xsub
   batch_size:
     bind_to: processor_cfg.batch_size
   resume_from:
@@ -33,12 +33,12 @@ processor_cfg:
   # dataset setting
   dataset_cfg:
     - type: 'deprecated.datasets.skeleton_feeder.SkeletonFeeder'
-      data_path: '../drive/My Drive/NTU-RGB-D/xsub/train_data.npy'
-      label_path: '../drive/My Drive/NTU-RGB-D/xsub/train_label.pkl'
+      data_path: ./data/NTU-RGB-D/xsub/train_data.npy
+      label_path: ./data/NTU-RGB-D/xsub/train_label.pkl
       # debug: true
     - type: 'deprecated.datasets.skeleton_feeder.SkeletonFeeder'
-      data_path: '../drive/My Drive/NTU-RGB-D/xsub/val_data.npy'
-      label_path: '../drive/My Drive/NTU-RGB-D/xsub/val_label.pkl'
+      data_path: ./data/NTU-RGB-D/xsub/val_data.npy
+      label_path: ./data/NTU-RGB-D/xsub/val_label.pkl
       # debug: true
 
   # dataloader setting
@@ -57,7 +57,7 @@ processor_cfg:
 
   # runtime setting
   workflow: [['train', 5], ['val', 1]]
-  work_dir: '../drive/My Drive/work_dir'
+  work_dir:
   log_level: 0
   total_epochs: 80
   training_hooks:
