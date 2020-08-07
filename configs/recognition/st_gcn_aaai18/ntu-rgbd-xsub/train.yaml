@@ -42,7 +42,9 @@ processor_cfg:
       # debug: true
 
   # dataloader setting
+
   batch_size: 44
+
   gpus: 1
 
   # optimizer setting
@@ -69,5 +71,6 @@ processor_cfg:
     checkpoint_config:
       interval: 5
     optimizer_config:
+      grad_clip:
   resume_from:
   load_from:
