@@ -34,7 +34,7 @@ processor_cfg:
   dataset_cfg:
     - type: 'deprecated.datasets.skeleton_feeder.SkeletonFeeder'
       data_path: '/content/drive/My Drive/NTU-RGB-D/xsub/train_data.npy'
-      label_path: '/content/drive/My\ Drive/NTU-RGB-D/xsub/train_label.pkl'
+      label_path: '/content/drive/My Drive/NTU-RGB-D/xsub/train_label.pkl'
       # debug: true
     - type: 'deprecated.datasets.skeleton_feeder.SkeletonFeeder'
       data_path: '/content/drive/My Drive/NTU-RGB-D/xsub/val_data.npy'
