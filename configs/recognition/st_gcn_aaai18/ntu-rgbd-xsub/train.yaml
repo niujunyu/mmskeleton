@@ -5,7 +5,7 @@ argparse_cfg:
   work_dir:
     bind_to: processor_cfg.work_dir
     help: the dir to save logs and models
-    default: '.My Drive/work_dir'
+    default: './drive/My Drive/work_dir'
   batch_size:
     bind_to: processor_cfg.batch_size
   resume_from:
@@ -33,12 +33,12 @@ processor_cfg:
   # dataset setting
   dataset_cfg:
     - type: 'deprecated.datasets.skeleton_feeder.SkeletonFeeder'
-      data_path: '.My Drive/NTU-RGB-D/xsub/train_data.npy'
-      label_path: '.My Drive//NTU-RGB-D/xsub/train_label.pkl'
+      data_path: '.drive/My Drive/NTU-RGB-D/xsub/train_data.npy'
+      label_path: '.drive/My Drive//NTU-RGB-D/xsub/train_label.pkl'
       # debug: true
     - type: 'deprecated.datasets.skeleton_feeder.SkeletonFeeder'
-      data_path: '.My Drive//NTU-RGB-D/xsub/val_data.npy'
-      label_path: '.My Drive//NTU-RGB-D/xsub/val_label.pkl'
+      data_path: '.drive/My Drive//NTU-RGB-D/xsub/val_data.npy'
+      label_path: '.drive/My Drive//NTU-RGB-D/xsub/val_label.pkl'
       # debug: true
 
   # dataloader setting
