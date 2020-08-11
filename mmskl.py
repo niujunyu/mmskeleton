@@ -4,6 +4,7 @@ import sys
 import logging
 
 import torch
+torch.multiprocessing.set_sharing_strategy('file_system')
 import mmskeleton
 from mmcv import Config
 from mmskeleton.utils import call_obj, set_attr, get_attr

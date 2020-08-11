@@ -10,7 +10,7 @@ argparse_cfg:
   checkpoint:
     bind_to: processor_cfg.checkpoint
     help: the checkpoint file to load from
-    default: mmskeleton://st_gcn/ntu-xsub
+    default: epoch_35.zip
 
 processor_cfg:
   type: "processor.recognition.test"
@@ -37,4 +37,4 @@ processor_cfg:
   # dataloader setting
   batch_size: null
   gpu_batch_size: 64
-  gpus: -1
+  gpus: 1
