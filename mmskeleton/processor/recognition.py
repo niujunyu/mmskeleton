@@ -44,7 +44,7 @@ def test(model_cfg,
     prog_bar = ProgressBar(len(dataset))
     for data, label in data_loader:
         with torch.no_grad():
-            output = model(data)
+            # output = model(data)
             output = model(data).data.cpu().numpy()
 
         results.append(output)
