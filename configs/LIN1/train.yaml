@@ -5,7 +5,7 @@ argparse_cfg:
   work_dir:
     bind_to: processor_cfg.work_dir
     help: the dir to save logs and models
-    default: ./work_dir/recognition/ST_GCN_18/ntu-rgbd-xsub
+    default: ./work_dir/A_work_dir
   batch_size:
     bind_to: processor_cfg.batch_size
   resume_from:
@@ -19,7 +19,7 @@ processor_cfg:
 
   # model setting
   model_cfg:
-    type: 'models.backbones.ST_GCN_18'
+    type: 'models.backbones.ST_GCN_learnimportance1'
     in_channels: 3
     num_class: 60
     dropout: 0.5
@@ -54,14 +54,14 @@ processor_cfg:
     weight_decay: 0.0001
 
   # runtime setting
-  workflow: [['train', 5], ['val', 1]]
+  workflow: [['train', 1],['val',0]]
   work_dir: 
   log_level: 0
   total_epochs: 80
   training_hooks:
     lr_config:
       policy: 'step'
-      step: [10, 50]
+      step: [10,20,30]
     log_config:
       interval: 100
       hooks:

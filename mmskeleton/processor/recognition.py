@@ -161,3 +161,6 @@ def weights_init(model):
     elif classname.find('BatchNorm') != -1:
         model.weight.data.normal_(1.0, 0.02)
         model.bias.data.fill_(0)
+    # elif classname.find('ANet') != -1:
+    #     model.weight.data.normal_(0.0, 0.02)
+    #     model.bias.data.fill_(0)
