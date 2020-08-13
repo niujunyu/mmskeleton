@@ -19,7 +19,7 @@ processor_cfg:
 
   # model setting
   model_cfg:
-    type: 'models.backbones.ST_GCN_niu'
+    type: 'models.backbones.ST_GCN_ones'
     in_channels: 3
     num_class: 60
     dropout: 0.5
@@ -67,7 +67,7 @@ processor_cfg:
       hooks:
         - type: TextLoggerHook
     checkpoint_config:
-      interval: 5
+      interval: 3
     optimizer_config:
       grad_clip:
   resume_from:
