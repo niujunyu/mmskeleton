@@ -537,8 +537,10 @@ class ST_GCN_learnimportance1(nn.Module):
     def forward(self, x):
         # data normalization
         N, C, T, V, M = x.size()
-        input_ILN = x.mean(dim=2).view(N,-1)
 
+        input_ILN = x.mean(dim=2).view(N,-1)
+        importance = 1 - self.ILN(input_ILN)
+        x = torch.einsum('nctvm,nv->nctvm', x, importance)
         x = x.permute(0, 4, 3, 1, 2).contiguous()
         x = x.view(N * M, V * C, T)
         x = self.data_bn(x)
@@ -546,8 +548,8 @@ class ST_GCN_learnimportance1(nn.Module):
         x = x.permute(0, 1, 3, 4, 2).contiguous()
         x = x.view(N * M, C, T, V)
 
-        importance = 1-self.ILN(input_ILN)
-        x = x*importance
+
+
         # forward
         for gcn in self.st_gcn_networks:
             x, _ = gcn(x, self.A)
