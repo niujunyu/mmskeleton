@@ -1,8 +1,13 @@
 import torch
 from mmskeleton.models.backbones.st_gcn_aaai18 import ST_GCN_learnimportance1,ST_GCN_ones
-a=torch.load(r"/home/niu/Code/mmskeleton/checkpoints/st_gcn.ntu-xsub-300b57d4.pth")
-
-a['A'] = torch.ones(size=(3, 25, 25),
+state=torch.load(r"/home/niu/Code/mmskeleton/checkpoints/st_gcn.ntu-xsub-300b57d4.pth")
+a={'meta':{}}
+a['meta']['epoch']=0
+a['meta']['iter']=0
+a['meta']['mmcv_version']='0.4.0'
+a['meta']['time']='Tue Aug 11 08:01:59 2020'
+a['state_dict']=state
+a['state_dict']['A'] = torch.ones(size=(3, 25, 25),
                        dtype=torch.float32,
                        requires_grad=True
                        , device='cuda')
@@ -12,7 +17,7 @@ b=model_dict1
 LIN1.load_state_dict(a,False)
 
 
-torch.save(LIN1.state_dict(),"pretrain_ones.pth")
+torch.save(a,"pretrain_ones.pth")
 #
 # # 1. filter out unnecessary keys
 # pretrained_dict = {k: v for k, v in a.items() if k in model_dict}

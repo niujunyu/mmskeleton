@@ -166,8 +166,7 @@ class ST_GCN_niu(nn.Module):
                          dtype=torch.float32,
                          requires_grad=True
                          ,device='cuda')
-
-        self.A=A
+        self.register_buffer('A', A)
         # build networks
         spatial_kernel_size = A.size(0)
         temporal_kernel_size = 9
