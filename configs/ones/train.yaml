@@ -61,13 +61,13 @@ processor_cfg:
   training_hooks:
     lr_config:
       policy: 'step'
-      step: [10,20]
+      step: [10,40]
     log_config:
       interval: 100
       hooks:
         - type: TextLoggerHook
     checkpoint_config:
-      interval: 3
+      interval: 5
     optimizer_config:
       grad_clip:
   resume_from:
