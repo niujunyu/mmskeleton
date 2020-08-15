@@ -61,7 +61,7 @@ processor_cfg:
   training_hooks:
     lr_config:
       policy: 'step'
-      step: [10,40]
+      step: [10,50]
     log_config:
       interval: 100
       hooks:
