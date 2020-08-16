@@ -102,6 +102,8 @@ class ST_GCN_LIN2(nn.Module):
 
         input_ILN = x.mean(dim=2).view(N,-1)
         importance = self.ILN(input_ILN)
+        x=torch.cat((x,importance.unsqueeze(1).unsqueeze(1).unsqueeze(4).expand(-1,C,T,-1,1)),dim=4)
+        N, C, T, V, M = x.size()
         x = torch.einsum('nctvm,nv->nctvm', x, importance)
         x = x.permute(0, 4, 3, 1, 2).contiguous()
         x = x.view(N * M, V * C, T)
