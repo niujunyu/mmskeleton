@@ -25,7 +25,8 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
         # 正向传播输入值, 神经网络分析出输出值
         x = F.relu(self.hidden(x))  # 激励函数(隐藏层的线性值)
         x = self.predict(x)  # 输出值
-        x=F.softmax(x)
+        x=F.sigmoid(x)
+        # x=F.softmax(x,dim=1)
         return x
 
 class ST_GCN_LIN2(nn.Module):
@@ -94,13 +95,13 @@ class ST_GCN_LIN2(nn.Module):
         # self.Anet=ANet(K*V*V,K*V*V*3,K*V*V)
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
-
+        self.ILN = ANet(150, 300, 25)
     def forward(self, x):
         # data normalization
         N, C, T, V, M = x.size()
 
         input_ILN = x.mean(dim=2).view(N,-1)
-        importance = 1 - self.ILN(input_ILN)
+        importance = self.ILN(input_ILN)
         x = torch.einsum('nctvm,nv->nctvm', x, importance)
         x = x.permute(0, 4, 3, 1, 2).contiguous()
         x = x.view(N * M, V * C, T)
@@ -108,6 +109,19 @@ class ST_GCN_LIN2(nn.Module):
         x = x.view(N, M, V, C, T)
         x = x.permute(0, 1, 3, 4, 2).contiguous()
         x = x.view(N * M, C, T, V)
+
+
+        # forward
+        for gcn in self.st_gcn_networks:
+            x, _ = gcn(x, self.A)
+
+        # global pooling
+        x = F.avg_pool2d(x, x.size()[2:])
+        x = x.view(N, M, -1, 1, 1).mean(dim=1)
+
+        # prediction
+        x = self.fcn(x)
+        x = x.view(x.size(0), -1)
 
         return x
 
