@@ -13,7 +13,20 @@ def zero(x):
 def iden(x):
     return x
 
+class ANet(torch.nn.Module):  # 继承 torch 的 Module
+    def __init__(self, n_feature, n_hidden, n_output):
+        super(ANet, self).__init__()  # 继承 __init__ 功能
+        # 定义每层用什么样的形式
+        self.hidden = torch.nn.Linear(n_feature, n_hidden)  # 隐藏层线性输出
+        self.predict = torch.nn.Linear(n_hidden, n_output)  # 输出层线性输出
 
+
+    def forward(self, x):  # 这同时也是 Module 中的 forward 功能
+        # 正向传播输入值, 神经网络分析出输出值
+        x = F.relu(self.hidden(x))  # 激励函数(隐藏层的线性值)
+        x = self.predict(x)  # 输出值
+        x=F.softmax(x)
+        return x
 
 class ST_GCN_LIN2(nn.Module):
     r"""Spatial temporal graph convolutional networks.
@@ -85,24 +98,16 @@ class ST_GCN_LIN2(nn.Module):
     def forward(self, x):
         # data normalization
         N, C, T, V, M = x.size()
+
+        input_ILN = x.mean(dim=2).view(N,-1)
+        importance = 1 - self.ILN(input_ILN)
+        x = torch.einsum('nctvm,nv->nctvm', x, importance)
         x = x.permute(0, 4, 3, 1, 2).contiguous()
         x = x.view(N * M, V * C, T)
         x = self.data_bn(x)
         x = x.view(N, M, V, C, T)
         x = x.permute(0, 1, 3, 4, 2).contiguous()
         x = x.view(N * M, C, T, V)
-
-        # forward
-        for gcn in self.st_gcn_networks:
-            x, _ = gcn(x, self.A )
-
-        # global pooling
-        x = F.avg_pool2d(x, x.size()[2:])
-        x = x.view(N, M, -1, 1, 1).mean(dim=1)
-
-        # prediction
-        x = self.fcn(x)
-        x = x.view(x.size(0), -1)
 
         return x
 

@@ -50,8 +50,8 @@ class ST_GCN_ones(nn.Module):
                        requires_grad=True
                        , device='cuda')
 
-
-        self.register_buffer('A', A)
+        self.A=nn.Parameter(torch.ones(self.A.size()))
+        
         # build networks
         spatial_kernel_size = A.size(0)
         temporal_kernel_size = 9
@@ -453,11 +453,13 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
         # 定义每层用什么样的形式
         self.hidden = torch.nn.Linear(n_feature, n_hidden)  # 隐藏层线性输出
         self.predict = torch.nn.Linear(n_hidden, n_output)  # 输出层线性输出
+        self.softmax=torch.nn
 
     def forward(self, x):  # 这同时也是 Module 中的 forward 功能
         # 正向传播输入值, 神经网络分析出输出值
         x = F.relu(self.hidden(x))  # 激励函数(隐藏层的线性值)
         x = self.predict(x)  # 输出值
+
         return x
 
 
