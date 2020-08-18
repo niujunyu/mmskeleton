@@ -67,7 +67,7 @@ processor_cfg:
       hooks:
         - type: TextLoggerHook
     checkpoint_config:
-      interval: 5
+      interval: 4
     optimizer_config:
       grad_clip:
   resume_from:

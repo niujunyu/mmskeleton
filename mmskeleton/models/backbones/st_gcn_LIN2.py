@@ -59,12 +59,11 @@ class ST_GCN_LIN2(nn.Module):
 
         # load graph
         self.graph = Graph(**graph_cfg)
-        A = torch.ones(size=(3, 25, 25),
-                       dtype=torch.float32,
-                       requires_grad=True
-                       , device='cuda')
+        A = torch.tensor(self.graph.A,
+                         dtype=torch.float32,
+                         requires_grad=False)
+        self.register_buffer('A', A)
 
-        self.A = A
         # build networks
         spatial_kernel_size = A.size(0)
         temporal_kernel_size = 9
