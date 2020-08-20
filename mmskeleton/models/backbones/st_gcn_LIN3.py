@@ -17,19 +17,25 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
     def __init__(self, n_feature, n_hidden, n_output):
         super(ANet, self).__init__()  # 继承 __init__ 功能
         # 定义每层用什么样的形式
-        self.hidden = torch.nn.Linear(n_feature, n_hidden)  # 隐藏层线性输出
-        self.predict = torch.nn.Linear(n_hidden, n_output)  # 输出层线性输出
+        self.anet = nn.Sequential(
+            nn.BatchNorm1d(n_feature),
+            nn.Linear(n_feature, n_hidden),
+            nn.Dropout(0.5),
+            nn.ReLU(inplace=True),
+            nn.Linear(n_hidden, n_hidden),
+            nn.Dropout(0.5),
+            nn.ReLU(inplace=True),
+            nn.Linear(n_hidden, n_output),
+        )
+# 输出层线性输出
 
 
     def forward(self, x):  # 这同时也是 Module 中的 forward 功能
         # 正向传播输入值, 神经网络分析出输出值
-        x = F.relu(self.hidden(x))  # 激励函数(隐藏层的线性值)
-        x = self.predict(x)  # 输出值
-        x=F.sigmoid(x)
-        # x=F.softmax(x,dim=1)
-        return x
+        x=self.anet(x)
+        return torch.sigmoid(x)
 
-class ST_GCN_LIN2(nn.Module):
+class ST_GCN_LIN3(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
@@ -56,7 +62,12 @@ class ST_GCN_LIN2(nn.Module):
                  data_bn=True,
                  **kwargs):
         super().__init__()
+        '''
+         change data channel
+         '''
+        in_channels = 4
 
+        
         # load graph
         self.graph = Graph(**graph_cfg)
         A = torch.tensor(self.graph.A,
@@ -64,12 +75,14 @@ class ST_GCN_LIN2(nn.Module):
                          requires_grad=False)
         self.register_buffer('A', A)
 
+
+
         # build networks
         spatial_kernel_size = A.size(0)
         temporal_kernel_size = 9
         kernel_size = (temporal_kernel_size, spatial_kernel_size)
-        self.data_bn = nn.BatchNorm1d(in_channels *
-                                      A.size(1)) if data_bn else iden
+        self.data_bn = nn.BatchNorm1d(
+                                      100) if data_bn else iden
         kwargs0 = {k: v for k, v in kwargs.items() if k != 'dropout'}
         self.st_gcn_networks = nn.ModuleList((
             st_gcn_block(in_channels,
@@ -94,22 +107,22 @@ class ST_GCN_LIN2(nn.Module):
         # self.Anet=ANet(K*V*V,K*V*V*3,K*V*V)
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
-        self.ILN = ANet(150, 300, 25)
+        self.ILN = ANet(150,400, 25)
     def forward(self, x):
         # data normalization
         N, C, T, V, M = x.size()
 
         input_ILN = x.mean(dim=2).view(N,-1)
         importance = self.ILN(input_ILN)
-        x=torch.cat((x,importance.unsqueeze(1).unsqueeze(1).unsqueeze(4).expand(-1,C,T,-1,1)),dim=4)
+        x=torch.cat((x,importance.unsqueeze(1).unsqueeze(1).unsqueeze(4).expand(N,1,T,V,M)),dim=1)
         N, C, T, V, M = x.size()
-        x = torch.einsum('nctvm,nv->nctvm', x, importance)
         x = x.permute(0, 4, 3, 1, 2).contiguous()
         x = x.view(N * M, V * C, T)
         x = self.data_bn(x)
         x = x.view(N, M, V, C, T)
         x = x.permute(0, 1, 3, 4, 2).contiguous()
         x = x.view(N * M, C, T, V)
+
 
 
         # forward
@@ -153,7 +166,7 @@ class ST_GCN_LIN2(nn.Module):
 
 class st_gcn_block(nn.Module):
     r"""Applies a spatial temporal graph convolution over an input graph sequence.
-    Args:out_channels
+    Args:
         in_channels (int): Number of channels in the input sequence data
         out_channels (int): Number of channels produced by the convolution
         kernel_size (tuple): Size of the temporal convolving kernel and graph convolving kernel
