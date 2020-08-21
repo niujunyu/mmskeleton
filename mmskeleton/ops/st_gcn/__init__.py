@@ -1,2 +1,2 @@
-from .gconv_origin import ConvTemporalGraphical
+from .gconv_origin import ConvTemporalGraphical,ConvTemporalGraphicalBatchA
 from .graph import Graph

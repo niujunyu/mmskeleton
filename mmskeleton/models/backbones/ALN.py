@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
-from mmskeleton.ops.st_gcn import ConvTemporalGraphical, Graph
+from mmskeleton.ops.st_gcn import ConvTemporalGraphicalBatchA, Graph
 
 
 def zero(x):
@@ -12,6 +12,7 @@ def zero(x):
 
 def iden(x):
     return x
+
 
 class ANet(torch.nn.Module):  # 继承 torch 的 Module
     def __init__(self, n_feature, n_hidden, n_output):
@@ -29,17 +30,13 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
         )
 # 输出层线性输出
 
-
     def forward(self, x):  # 这同时也是 Module 中的 forward 功能
         # 正向传播输入值, 神经网络分析出输出值
         x=self.anet(x)
         return torch.sigmoid(x)
 
-class ST_GCN_LIN3(nn.Module):
-    """
-    add drop out in ANET
 
-    """
+class ST_GCN_ALN(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
@@ -66,27 +63,20 @@ class ST_GCN_LIN3(nn.Module):
                  data_bn=True,
                  **kwargs):
         super().__init__()
-        '''
-         change data channel
-         '''
-        in_channels = 4
-
 
         # load graph
         self.graph = Graph(**graph_cfg)
         A = torch.tensor(self.graph.A,
                          dtype=torch.float32,
-                        requires_grad=False)
+                         requires_grad=False)
         self.register_buffer('A', A)
-
-
 
         # build networks
         spatial_kernel_size = A.size(0)
         temporal_kernel_size = 9
         kernel_size = (temporal_kernel_size, spatial_kernel_size)
-        self.data_bn = nn.BatchNorm1d(
-                                      100) if data_bn else iden
+        self.data_bn = nn.BatchNorm1d(in_channels *
+                                      A.size(1)) if data_bn else iden
         kwargs0 = {k: v for k, v in kwargs.items() if k != 'dropout'}
         self.st_gcn_networks = nn.ModuleList((
             st_gcn_block(in_channels,
@@ -107,19 +97,24 @@ class ST_GCN_LIN3(nn.Module):
         ))
 
         # initialize parameters for edge importance weighting
-        # K,V,_=A.size()
-        # self.Anet=ANet(K*V*V,K*V*V*3,K*V*V)
+
+
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
-        self.ILN = ANet(150,400, 25)
+        self.ALN = ANet(150,800, 625)
+
     def forward(self, x):
         # data normalization
         N, C, T, V, M = x.size()
 
-        input_ILN = x.mean(dim=2).view(N,-1)
-        importance = self.ILN(input_ILN)
-        x=torch.cat((x,importance.unsqueeze(1).unsqueeze(1).unsqueeze(4).expand(N,1,T,V,M)),dim=1)
-        N, C, T, V, M = x.size()
+        input_ILN = x.mean(dim=2).view(N, -1)
+        A = self.ALN(input_ILN)
+        A = A.view(N,25, 25).cuda()
+        B= torch.ones(A.shape).cuda()
+        for i in range(N):
+            B[i]=A[i] + A[i].T - torch.diag(A[i].diagonal())
+        Bclone=B.clone().cuda()
+        BA=torch.cat((Bclone,B),dim=0).view(-1,1,25,25).cuda()
         x = x.permute(0, 4, 3, 1, 2).contiguous()
         x = x.view(N * M, V * C, T)
         x = self.data_bn(x)
@@ -127,11 +122,9 @@ class ST_GCN_LIN3(nn.Module):
         x = x.permute(0, 1, 3, 4, 2).contiguous()
         x = x.view(N * M, C, T, V)
 
-
-
         # forward
-        for gcn in self.st_gcn_networks:
-            x, _ = gcn(x, self.A)
+        for gcn in  self.st_gcn_networks:
+            x, _ = gcn(x, BA)
 
         # global pooling
         x = F.avg_pool2d(x, x.size()[2:])
@@ -155,8 +148,8 @@ class ST_GCN_LIN3(nn.Module):
         x = x.view(N * M, C, T, V)
 
         # forwad
-        for gcn in self.st_gcn_networks:
-            x, _ = gcn(x, self.A )
+        for gcn, importance in zip(self.st_gcn_networks, self.edge_importance):
+            x, _ = gcn(x, self.A * importance)
 
         _, c, t, v = x.size()
         feature = x.view(N, M, c, t, v).permute(0, 2, 3, 4, 1)
@@ -166,6 +159,7 @@ class ST_GCN_LIN3(nn.Module):
         output = x.view(N, M, -1, t, v).permute(0, 2, 3, 4, 1)
 
         return output, feature
+
 
 
 class st_gcn_block(nn.Module):
@@ -201,7 +195,7 @@ class st_gcn_block(nn.Module):
         assert kernel_size[0] % 2 == 1
         padding = ((kernel_size[0] - 1) // 2, 0)
 
-        self.gcn = ConvTemporalGraphical(in_channels, out_channels,
+        self.gcn = ConvTemporalGraphicalBatchA(in_channels, out_channels,
                                          kernel_size[1])
 
         self.tcn = nn.Sequential(
