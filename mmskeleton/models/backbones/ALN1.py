@@ -36,7 +36,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
         return torch.sigmoid(x)
 
 
-class ST_GCN_ALN(nn.Module):
+class ST_GCN_ALN1(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
@@ -102,20 +102,12 @@ class ST_GCN_ALN(nn.Module):
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
         # self.ALN = ANet(150,800, 625)
-        self.ALN = ANet(150,800, 625)
-
+        self.ALN = ANet(22500,2000, 625)
     def forward(self, x):
         # data normalization
         N, C, T, V, M = x.size()
 
-        input_ILN = x.mean(dim=2).view(N, -1)
-        A = self.ALN(input_ILN)
-        A = A.view(N,25, 25).cuda()
-        B= torch.ones(A.shape).cuda()
-        for i in range(N):
-            B[i]=A[i] + A[i].T - torch.diag(A[i].diagonal())
-        Bclone=B.clone().cuda()
-        BA=torch.cat((Bclone,B),dim=0).view(-1,1,25,25).cuda()
+
         x = x.permute(0, 4, 3, 1, 2).contiguous()
         x = x.view(N * M, V * C, T)
         x = self.data_bn(x)
@@ -123,9 +115,24 @@ class ST_GCN_ALN(nn.Module):
         x = x.permute(0, 1, 3, 4, 2).contiguous()
         x = x.view(N * M, C, T, V)
 
+
+        # input_ILN = x.mean(dim=2).view(N*M, -1)
+        input_ILN = x.view(N * M, -1)
+        ALN_out = self.ALN(input_ILN)
+        # ALN_out = ALN_out.view(N,-1).cuda()
+        A = torch.ones((N*M,25, 25)).cuda()
+        index = 0
+        for i in range(25):
+            for j in range(i + 1):
+               for n in range(N*M):
+                    A[n][i][j] = ALN_out[n][index]
+                    if (i != j): A[n][j][i] = ALN_out[n][index]
+               index += 1
+        A=A.view(-1, 1, 25, 25).cuda()
+
         # forward
         for gcn in  self.st_gcn_networks:
-            x, _ = gcn(x, BA)
+            x, _ = gcn(x, A)
 
         # global pooling
         x = F.avg_pool2d(x, x.size()[2:])
