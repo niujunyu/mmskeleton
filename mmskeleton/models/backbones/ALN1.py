@@ -18,7 +18,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
     def __init__(self, n_feature, n_hidden, n_output):
         super(ANet, self).__init__()  # 继承 __init__ 功能
         # 定义每层用什么样的形式
-        conv1 = nn.Conv1d(in_channels=75, out_channels=5, kernel_size=1)
+        self.conv1 = nn.Conv1d(in_channels=75, out_channels=5, kernel_size=1)
         self.anet = nn.Sequential(
             nn.BatchNorm1d(n_feature),
             nn.Linear(n_feature, n_hidden),
