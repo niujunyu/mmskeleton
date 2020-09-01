@@ -18,13 +18,14 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
     def __init__(self, n_feature, n_hidden, n_output):
         super(ANet, self).__init__()  # 继承 __init__ 功能
         # 定义每层用什么样的形式
+        conv1 = nn.Conv1d(in_channels=75, out_channels=5, kernel_size=1)
         self.anet = nn.Sequential(
             nn.BatchNorm1d(n_feature),
             nn.Linear(n_feature, n_hidden),
-            nn.Dropout(0.5),
+            # nn.Dropout(0.5),
             nn.ReLU(inplace=True),
             nn.Linear(n_hidden, n_hidden),
-            nn.Dropout(0.5),
+            # nn.Dropout(0.5),
             nn.ReLU(inplace=True),
             nn.Linear(n_hidden, n_output),
         )
@@ -32,6 +33,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
     def forward(self, x):  # 这同时也是 Module 中的 forward 功能
         # 正向传播输入值, 神经网络分析出输出值
+        x=self.conv1(x)
         x=self.anet(x)
         return torch.sigmoid(x)
 
@@ -102,7 +104,7 @@ class ST_GCN_ALN1(nn.Module):
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
         # self.ALN = ANet(150,800, 625)
-        self.ALN = ANet(22500,2000, 625)
+        self.ALN = ANet(1500,1000, 625)
     def forward(self, x):
         # data normalization
         N, C, T, V, M = x.size()
@@ -115,9 +117,9 @@ class ST_GCN_ALN1(nn.Module):
         x = x.permute(0, 1, 3, 4, 2).contiguous()
         x = x.view(N * M, C, T, V)
 
-
         # input_ILN = x.mean(dim=2).view(N*M, -1)
-        input_ILN = x.view(N * M, -1)
+        input_ILN = x.permute(0, 1, 3, 2).contiguous()
+        input_ILN = input_ILN.view(N * M,75, T)
         ALN_out = self.ALN(input_ILN)
         # ALN_out = ALN_out.view(N,-1).cuda()
         A = torch.ones((N*M,25, 25)).cuda()
