@@ -6,7 +6,9 @@ from torch.autograd import Variable
 from mmskeleton.ops.st_gcn import ConvTemporalGraphicalBatchA, Graph
 
 """
-A矩阵不对称版本
+A矩阵对称版本  
+dropout rop half of A matrix 
+1Dconv in V  
 """
 def zero(x):
     return 0
@@ -24,10 +26,10 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
         self.anet = nn.Sequential(
             nn.BatchNorm1d(n_feature),
             nn.Linear(n_feature, n_hidden),
-            # nn.Dropout(0.5),
+            nn.Dropout(0.5),
             nn.ReLU(inplace=True),
             nn.Linear(n_hidden, n_hidden),
-            # nn.Dropout(0.5),
+            nn.Dropout(0.5),
             nn.ReLU(inplace=True),
             nn.Linear(n_hidden, n_output),
         )
@@ -41,7 +43,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
         return torch.sigmoid(x)
 
 
-class ST_GCN_ALN1(nn.Module):
+class ST_GCN_ALN4(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
@@ -118,7 +120,6 @@ class ST_GCN_ALN1(nn.Module):
         x = self.data_bn(x)
         x = x.view(N, M, V, C, T)
         x = x.permute(0, 1, 3, 4, 2).contiguous()
-
         x = x.view(N * M, C, T, V)
 
         # input_ILN = x.mean(dim=2).view(N*M, -1)
@@ -128,8 +129,11 @@ class ST_GCN_ALN1(nn.Module):
         # ALN_out = ALN_out.view(N,-1).cuda()
 
         A = ALN_out.view(N*M,1,25, 25).cuda()
-        # index = 0
-        # for i in range(25):
+
+        A = A.triu(diagonal=1)
+        eyes = torch.eye(25,25).repeat(N*M,1,1,1)
+        A = A + A.permute(0,1,3,2) + eyes     # index = 0
+        # for i in range(25)
         #     for j in range(i + 1):
         #        for n in range(N*M):
         #             A[n][i][j] = ALN_out[n][index]
