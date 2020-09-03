@@ -41,7 +41,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
         return torch.sigmoid(x)
 
 
-class ST_GCN_ALN1(nn.Module):
+class ST_GCN_ALN2(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
