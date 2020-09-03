@@ -25,7 +25,7 @@ processor_cfg:
     edge_importance_weighting: True
     graph_cfg:
       layout: "ntu-rgb+d"
-      strategy: "unicode"
+      strategy: "uniform"
 
   # dataset setting
   dataset_cfg:

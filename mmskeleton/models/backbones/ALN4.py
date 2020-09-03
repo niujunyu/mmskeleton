@@ -130,8 +130,8 @@ class ST_GCN_ALN4(nn.Module):
 
         A = ALN_out.view(N*M,1,25, 25).cuda()
 
-        A = A.triu(diagonal=1)
-        eyes = torch.eye(25,25).repeat(N*M,1,1,1)
+        A = A.triu(diagonal=1).cuda()
+        eyes = torch.eye(25,25).repeat(N*M,1,1,1).cuda()
         A = A + A.permute(0,1,3,2) + eyes     # index = 0
         # for i in range(25)
         #     for j in range(i + 1):
