@@ -125,6 +125,8 @@ class ST_GCN_ALN8(nn.Module):
 
         # input_ILN = x.mean(dim=2).view(N*M, -1)
         input_ILN = x.permute(0, 1, 3, 2).contiguous()
+        input_ILN = input_ILN.permute(0, 2, 1, 3).contiguous()
+        input_ILN=input_ILN.view(N*M,V,C*T)
         ALN_out = self.ALN(input_ILN)
         # ALN_out = ALN_out.view(N,-1).cuda()
 

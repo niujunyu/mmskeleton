@@ -130,14 +130,6 @@ class ST_GCN_ALN6(nn.Module):
 
         A = ALN_out.view(N*M,4,25, 25).cuda()
         A =( A+A.permute(0,1,3,2))/2
-        # index = 0
-        # for i in range(25):
-        #     for j in range(i + 1):
-        #        for n in range(N*M):
-        #             A[n][i][j] = ALN_out[n][index]
-        #             if (i != j): A[n][j][i] = ALN_out[n][index]
-        #        index += 1
-        # A=A.view(-1, 1, 25, 25).cuda()
 
         # forward
         for gcn in  self.st_gcn_networks:

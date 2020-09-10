@@ -107,7 +107,7 @@ class ST_GCN_ALN7(nn.Module):
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
         # self.ALN = ANet(150,800, 625)
-        self.ALN = ANet(1500,1000, 625*2)
+        self.ALN = ANet(900,1200, 625*2)
     def forward(self, x):
         # data normalization
         N, C, T, V, M = x.size()
