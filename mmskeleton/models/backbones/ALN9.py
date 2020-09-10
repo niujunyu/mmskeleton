@@ -7,7 +7,7 @@ from mmskeleton.ops.st_gcn import ConvTemporalGraphicalBatchA, Graph
 
 """
 A矩阵对称版本  
-dropout rop half of A matrix 
+dropout rop half of A matrix (use all output of ALNt)
 1Dconv in V  
 减少网络深度
 删掉BN（不确定有用）
@@ -41,7 +41,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
         return torch.sigmoid(x)
 
 
-class ST_GCN_ALN7(nn.Module):
+class ST_GCN_ALN9(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
@@ -122,7 +122,8 @@ class ST_GCN_ALN7(nn.Module):
 
         # input_ILN = x.mean(dim=2).view(N*M, -1)
         input_ILN = x.permute(0, 1, 3, 2).contiguous()
-        input_ILN = input_ILN.view(N * M,75, T)
+        input_ILN= input_ILN.permute(0, 2, 1, 3).contiguous()
+        input_ILN = input_ILN.view(N * M,V, C*T)
         ALN_out = self.ALN(input_ILN)
         # ALN_out = ALN_out.view(N,-1).cuda()
 
