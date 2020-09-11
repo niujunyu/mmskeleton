@@ -19,7 +19,7 @@ processor_cfg:
 
   # model setting
   model_cfg:
-    type: 'models.backbones.ST_GCN_ALN6'
+    type: 'models.backbones.ST_GCN_ALN8'
     in_channels: 3
     num_class: 60
     dropout: 0.5
@@ -57,11 +57,11 @@ processor_cfg:
   workflow: [['train', 1],['val',0]]
   work_dir: 
   log_level: 0
-  total_epochs: 80
+  total_epochs: 50
   training_hooks:
     lr_config:
       policy: 'step'
-      step: [10,50]
+      step: [10,30,40]
     log_config:
       interval: 100
       hooks:
