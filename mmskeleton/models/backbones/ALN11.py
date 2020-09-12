@@ -10,7 +10,6 @@ A矩阵对称版本
 A  3*25*25
 A+A 
 1dconv on T
-fer by C dimention
 """
 def zero(x):
     return 0
@@ -24,9 +23,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
     def __init__(self, n_feature, n_hidden, n_output):
         super(ANet, self).__init__()  # 继承 __init__ 功能
         # 定义每层用什么样的形式
-        self.conv1 = nn.Conv1d(in_channels=25, out_channels=1, kernel_size=1)
-        self.conv2 = nn.Conv1d(in_channels=25, out_channels=1, kernel_size=1)
-        self.conv3 = nn.Conv1d(in_channels=25, out_channels=1, kernel_size=1)
+        self.conv1 = nn.Conv1d(in_channels=300, out_channels=5, kernel_size=1)
         self.anet = nn.Sequential(
             nn.BatchNorm1d(n_feature),
             nn.Linear(n_feature, n_hidden),
@@ -41,25 +38,15 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
     def forward(self, x):  # 这同时也是 Module 中的 forward 功能
         # 正向传播输入值, 神经网络分析出输出值
-        N , C, V, T = x.size()
 
-        (a, b, c) = torch.chunk(x, 3, dim=1)
-        a=a.view(N,V,T)
-        b=b.view(N,V,T)
-        c=c.view(N,V,T)
-        a = self.conv1(a)
-        b = self.conv2(b)
-        c = self.conv3(c)
-        a=a.view(N,-1)
-        b=b.view(N,-1)
-        c=c.view(N,-1)
-        x = torch.cat((a, b, c), dim=1)
-
-        x=self.anet(x)
+        x = self.conv1(x)
+        x = x.view(-1, 375)
+        x = self.anet(x)
         return torch.sigmoid(x)
 
 
-class ST_GCN_ALN10(nn.Module):
+
+class ST_GCN_ALN11(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
@@ -125,7 +112,7 @@ class ST_GCN_ALN10(nn.Module):
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
         # self.ALN = ANet(150,800, 625)
-        self.ALN = ANet(900,1500, 625*4)
+        self.ALN = ANet(375,1500, 625*4)
     def forward(self, x):
         # data normalization
         N, C, T, V, M = x.size()
@@ -139,8 +126,8 @@ class ST_GCN_ALN10(nn.Module):
         x = x.view(N * M, C, T, V)
 
         # input_ILN = x.mean(dim=2).view(N*M, -1)
-        input_ILN = x.permute(0, 1, 3, 2).contiguous()
-        input_ILN=input_ILN.view(N*M,C,V,T)
+        input_ILN = x.permute(0, 2, 1, 3).contiguous()
+        input_ILN=input_ILN.view(N*M,T,C*V)
         ALN_out = self.ALN(input_ILN)
         # ALN_out = ALN_out.view(N,-1).cuda()
 
