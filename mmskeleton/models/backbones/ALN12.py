@@ -132,14 +132,16 @@ class ST_GCN_ALN12(nn.Module):
         ALN_out = self.ALN(input_ILN)
         # ALN_out = ALN_out.view(N,-1).cuda()
 
+
         A = ALN_out.view(N * M, 2, 25, 25).cuda()
 
-        A1 = A.triu(diagonal=1)
-        A2 = A.permute(0, 1, 3, 2).triu(diagonal=1)
+        A1 = A.triu(diagonal=1).cuda()
+        A2 = A.permute(0, 1, 3, 2).triu(diagonal=1).cuda()
 
-        eyes = torch.eye(25, 25).repeat(N * M, 4, 1, 1)
+        eyes = torch.eye(25, 25).repeat(N * M, 4, 1, 1).cuda()
         A = torch.cat((A1, A2), 1)
         A = A + A.permute(0, 1, 3, 2) + eyes
+
 
         # index = 0
         # for i in range(25):
