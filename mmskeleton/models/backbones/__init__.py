@@ -14,4 +14,6 @@ from .ALN9 import ST_GCN_ALN9
 from .ALN10 import ST_GCN_ALN10
 from .ALN11 import ST_GCN_ALN11
 from .ALN12 import ST_GCN_ALN12
+from .ALN13 import ST_GCN_ALN13
+
 from .hrnet import HRNet
