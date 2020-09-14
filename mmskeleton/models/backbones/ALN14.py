@@ -30,7 +30,8 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
     def __init__(self, n_feature, n_hidden, n_output):
         super(ANet, self).__init__()  # 继承 __init__ 功能
         # 定义每层用什么样的形式
-        self.outputnum=n_output
+
+        self.Fnum=n_feature
         self.conv1 = nn.Conv1d(in_channels=300, out_channels=20, kernel_size=1)
         self.anet = nn.Sequential(
             nn.BatchNorm1d(n_feature),
@@ -52,9 +53,9 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
     def forward(self, x):  # 这同时也是 Module 中的 forward 功能
         # 正向传播输入值, 神经网络分析出输出值
-
+        N = x.shape[0]
         x = self.conv1(x)
-        x = x.view(-1, self.outputnum)
+        x = x.view(N, self.Fnum)
         x = self.anet(x)
         return torch.sigmoid(x)
 
