@@ -159,7 +159,7 @@ class ST_GCN_ALN13(nn.Module):
         #     for j in range(i + 1):
         #        for n in range(N*M):
         #             A[n][i][j] = ALN_out[n][index]
-        #             if (i != j): A[n][j][i] = ALN_out[n][index]
+        #             if (i != j): A[n]nn[j][i] = ALN_out[n][index]
         #        index += 1
         # A=A.view(-1, 1, 25, 25).cuda()
 
