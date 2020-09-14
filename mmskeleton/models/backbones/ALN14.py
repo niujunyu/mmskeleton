@@ -175,6 +175,7 @@ class ST_GCN_ALN14(nn.Module):
         x = F.avg_pool2d(x, x.size()[2:])
         x = x.view(N, M, -1)
         x=self.conv2to1(x)
+        x=x.view(N,-1,1,1)
         # prediction
         x = self.fcn(x)
         x = x.view(x.size(0), -1)
