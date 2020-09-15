@@ -6,11 +6,19 @@ from torch.autograd import Variable
 from mmskeleton.ops.st_gcn import ConvTemporalGraphicalBatchA, Graph
 
 """
+change from 11
 A矩阵对称版本  
 A  3*25*25
-A+A 
-1dconv on T
+a.triu  !!!!
+
+
+
+
+nfinished
+idea: use unsym(buduichen) A
+change from my highest model
 """
+
 
 def zero(x):
     return 0
@@ -47,7 +55,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
 
 
-class ST_GCN_ALN11(nn.Module):
+class ST_GCN_ALN16(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
@@ -133,7 +141,7 @@ class ST_GCN_ALN11(nn.Module):
         # ALN_out = ALN_out.view(N,-1).cuda()
 
         A = ALN_out.view(N*M,4,25, 25).cuda()
-        A =( A+A.permute(0,1,3,2))/2
+
         # index = 0
         # for i in range(25):
         #     for j in range(i + 1):

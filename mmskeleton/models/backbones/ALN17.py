@@ -6,12 +6,17 @@ from torch.autograd import Variable
 from mmskeleton.ops.st_gcn import ConvTemporalGraphicalBatchA, Graph
 
 """
+change from 
 A矩阵对称版本  
 A  3*25*25
-A+A 
-1dconv on T
-"""
+a.triu  !!!!
 
+
+
+
+nfinished
+idea: use learnable mask as origin code
+"""
 def zero(x):
     return 0
 
@@ -24,30 +29,29 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
     def __init__(self, n_feature, n_hidden, n_output):
         super(ANet, self).__init__()  # 继承 __init__ 功能
         # 定义每层用什么样的形式
+        self.Fnum=n_feature
         self.conv1 = nn.Conv1d(in_channels=300, out_channels=5, kernel_size=1)
         self.anet = nn.Sequential(
             nn.BatchNorm1d(n_feature),
-            nn.Linear(n_feature, n_hidden),
-            nn.Dropout(0.5),
             nn.ReLU(inplace=True),
-            nn.Linear(n_hidden, n_hidden),
+            nn.Linear(n_feature, n_output),
+            nn.BatchNorm1d(n_output),
             nn.Dropout(0.5),
-            nn.ReLU(inplace=True),
-            nn.Linear(n_hidden, n_output),
         )
 # 输出层线性输出
 
     def forward(self, x):  # 这同时也是 Module 中的 forward 功能
         # 正向传播输入值, 神经网络分析出输出值
 
+        N = x.shape[0]
         x = self.conv1(x)
-        x = x.view(-1, 375)
+        x = x.view(N, self.Fnum)
         x = self.anet(x)
         return torch.sigmoid(x)
 
 
 
-class ST_GCN_ALN11(nn.Module):
+class ST_GCN_ALN15(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
@@ -113,7 +117,7 @@ class ST_GCN_ALN11(nn.Module):
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
         # self.ALN = ANet(150,800, 625)
-        self.ALN = ANet(375,1500, 625*4)
+        self.ALN = ANet(375,1500, 625*2)
     def forward(self, x):
         # data normalization
         N, C, T, V, M = x.size()
@@ -132,8 +136,17 @@ class ST_GCN_ALN11(nn.Module):
         ALN_out = self.ALN(input_ILN)
         # ALN_out = ALN_out.view(N,-1).cuda()
 
-        A = ALN_out.view(N*M,4,25, 25).cuda()
-        A =( A+A.permute(0,1,3,2))/2
+
+        A = ALN_out.view(N * M, 2, 25, 25).cuda()
+
+        A1 = A.triu(diagonal=1).cuda()
+        A2 = A.permute(0, 1, 3, 2).triu(diagonal=1).cuda()
+
+        eyes = torch.eye(25, 25).repeat(N * M, 4, 1, 1).cuda()
+        A = torch.cat((A1, A2), 1)
+        A = A + A.permute(0, 1, 3, 2) + eyes
+
+
         # index = 0
         # for i in range(25):
         #     for j in range(i + 1):
