@@ -13,8 +13,8 @@ a.triu  !!!!
 
 
 
-无batchnormal
- 修改dropout位置
+多 batchnormal 新的排列方法  relu batchnorm 和 dropout
+ 
 """
 
 
@@ -32,19 +32,19 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
         # 定义每层用什么样的形式
         self.conv1 = nn.Conv1d(in_channels=300, out_channels=5, kernel_size=1)
         self.anet = nn.Sequential(
-            nn.ReLU(inplace=True),
-            nn.Dropout(dropout_value),
+
             nn.Linear(n_feature, n_hidden),
+            nn.BatchNorm1d(n_hidden),
             nn.ReLU(inplace=True),
             nn.Dropout(dropout_value),
-
             nn.Linear(n_hidden, n_hidden),
+            nn.BatchNorm1d(n_hidden),
             nn.ReLU(inplace=True),
             nn.Dropout(dropout_value),
-
             nn.Linear(n_hidden, n_output),
-
-
+            nn.BatchNorm1d(n_hidden),
+            nn.ReLU(inplace=True),
+            nn.Dropout(dropout_value),
         )
 # 输出层线性输出
 
@@ -58,7 +58,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
 
 
-class ST_GCN_ALN18(nn.Module):
+class ST_GCN_ALN19(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:

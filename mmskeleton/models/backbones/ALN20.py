@@ -6,15 +6,16 @@ from torch.autograd import Variable
 from mmskeleton.ops.st_gcn import ConvTemporalGraphicalBatchA, Graph
 
 """
-change from 16
+change from 19
 A矩阵对称版本  
 A  3*25*25
 a.triu  !!!!
 
 
 
-无batchnormal
- 修改dropout位置
+多 batchnormal 新的排列方法  relu batchnorm 和 dropout
+
+dropout = 0.2 
 """
 
 
@@ -32,19 +33,19 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
         # 定义每层用什么样的形式
         self.conv1 = nn.Conv1d(in_channels=300, out_channels=5, kernel_size=1)
         self.anet = nn.Sequential(
-            nn.ReLU(inplace=True),
-            nn.Dropout(dropout_value),
+
             nn.Linear(n_feature, n_hidden),
+            nn.BatchNorm1d(n_hidden),
             nn.ReLU(inplace=True),
             nn.Dropout(dropout_value),
-
             nn.Linear(n_hidden, n_hidden),
+            nn.BatchNorm1d(n_hidden),
             nn.ReLU(inplace=True),
             nn.Dropout(dropout_value),
-
             nn.Linear(n_hidden, n_output),
-
-
+            nn.BatchNorm1d(n_hidden),
+            nn.ReLU(inplace=True),
+            nn.Dropout(dropout_value),
         )
 # 输出层线性输出
 
@@ -58,7 +59,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
 
 
-class ST_GCN_ALN18(nn.Module):
+class ST_GCN_ALN20(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
@@ -124,7 +125,7 @@ class ST_GCN_ALN18(nn.Module):
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
         # self.ALN = ANet(150,800, 625)
-        self.ALN = ANet(375,1500, 625*4,0.5)
+        self.ALN = ANet(375,1500, 625*4,0.2)
     def forward(self, x):
         # data normalization
         N, C, T, V, M = x.size()
