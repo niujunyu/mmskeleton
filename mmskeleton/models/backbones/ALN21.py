@@ -18,7 +18,6 @@ add relu in con1  swoitch relu and dropout add bn in
 change the drop out to 0.3
 """
 
-
 def zero(x):
     return 0
 
@@ -28,7 +27,7 @@ def iden(x):
 
 
 class ANet(torch.nn.Module):  # 继承 torch 的 Module
-    def __init__(self, n_feature, n_hidden, n_output,Dropout_value):
+    def __init__(self, n_feature, n_hidden, n_output):
         super(ANet, self).__init__()  # 继承 __init__ 功能
         # 定义每层用什么样的形式
         self.conv1 = nn.Conv1d(in_channels=300, out_channels=5, kernel_size=1)
@@ -38,14 +37,14 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
             nn.Linear(n_feature, n_hidden),
             nn.ReLU(inplace=True),
-            nn.Dropout(Dropout_value),
+            nn.Dropout(0.5),
 
             nn.Linear(n_hidden, n_hidden),
             nn.ReLU(inplace=True),
-            nn.Dropout(Dropout_value),
+            nn.Dropout(0.5),
 
             nn.Linear(n_hidden, n_output),
-            nn.BatchNorm1d(n_feature),
+
         )
 # 输出层线性输出
 
@@ -125,7 +124,7 @@ class ST_GCN_ALN21(nn.Module):
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
         # self.ALN = ANet(150,800, 625)
-        self.ALN = ANet(375,1500, 625*4,0.3)
+        self.ALN = ANet(375,1500, 625*4)
     def forward(self, x):
         # data normalization
         N, C, T, V, M = x.size()

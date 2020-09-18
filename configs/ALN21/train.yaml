@@ -57,7 +57,7 @@ processor_cfg:
   workflow: [['train', 1],['val',0]]
   work_dir: 
   log_level: 0
-  total_epochs: 50
+  total_epochs: 40
   training_hooks:
     lr_config:
       policy: 'step'
