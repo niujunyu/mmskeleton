@@ -23,4 +23,5 @@ from .ALN17 import ST_GCN_ALN17
 from .ALN18 import ST_GCN_ALN18
 from .ALN19 import ST_GCN_ALN19
 from .ALN20 import ST_GCN_ALN20
+from .ALN21 import ST_GCN_ALN21
 from .hrnet import HRNet
