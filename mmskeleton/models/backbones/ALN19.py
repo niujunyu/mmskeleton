@@ -32,7 +32,8 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
         # 定义每层用什么样的形式
         self.conv1 = nn.Conv1d(in_channels=300, out_channels=5, kernel_size=1)
         self.anet = nn.Sequential(
-
+            nn.BatchNorm1d(n_feature),
+            nn.ReLU(inplace=True),
             nn.Linear(n_feature, n_hidden),
             nn.BatchNorm1d(n_hidden),
             nn.ReLU(inplace=True),
@@ -42,7 +43,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
             nn.ReLU(inplace=True),
             nn.Dropout(dropout_value),
             nn.Linear(n_hidden, n_output),
-            nn.BatchNorm1d(n_hidden),
+            nn.BatchNorm1d(n_output),
             nn.ReLU(inplace=True),
             nn.Dropout(dropout_value),
         )
