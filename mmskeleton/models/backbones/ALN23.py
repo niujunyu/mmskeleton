@@ -93,7 +93,7 @@ class ST_GCN_ALN23(nn.Module):
         self.register_buffer('A', A)
 
         # build networks
-        spatial_kernel_size = 4
+        spatial_kernel_size = 3
         temporal_kernel_size = 9
         kernel_size = (temporal_kernel_size, spatial_kernel_size)
         self.data_bn = nn.BatchNorm1d(in_channels *
