@@ -124,7 +124,7 @@ class ST_GCN_ALN22(nn.Module):
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
         # self.ALN = ANet(150,800, 625)
-        self.ALN = ANet(375,1500, 625)
+        self.ALN = ANet(375,1500, 625*4)
     def forward(self, x):
         # data normalization
         N, C, T, V, M = x.size()
