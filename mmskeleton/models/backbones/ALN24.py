@@ -14,7 +14,8 @@ a.triu  !!!!
 
 
 
-change the model shape 
+change the t 压缩 5-》20
+
 """
 
 def zero(x):
@@ -29,7 +30,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
     def __init__(self, n_feature, n_hidden1, n_hidden2 , n_output,dropout_value=0.3):
         super(ANet, self).__init__()  # 继承 __init__ 功能
         # 定义每层用什么样的形式
-        self.conv1 = nn.Conv1d(in_channels=300, out_channels=5, kernel_size=1)
+        self.conv1 = nn.Conv1d(in_channels=300, out_channels=20, kernel_size=1)
         self.anet = nn.Sequential(
             nn.BatchNorm1d(n_feature),
             nn.ReLU(inplace=True),
@@ -57,7 +58,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
 
 
-class ST_GCN_ALN23(nn.Module):
+class ST_GCN_ALN24(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
@@ -123,7 +124,7 @@ class ST_GCN_ALN23(nn.Module):
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
         # self.ALN = ANet(150,800, 625)
-        self.ALN = ANet(375,750,625*2, 625*3)
+        self.ALN = ANet(1400,1600,1800, 625*3)
     def forward(self, x):
         # data normalization
         N, C, T, V, M = x.size()
