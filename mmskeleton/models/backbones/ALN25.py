@@ -52,9 +52,9 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
         # 正向传播输入值, 神经网络分析出输出值
         N,  T, F  = x.size()
 
-        x = x[:,:,::20,:]
+        x = x[:,::20,:]
 
-        x = x.view(N,-1)
+        x = x.contiguous().view(N,-1)
         x = self.anet(x)
         return torch.sigmoid(x)
 
