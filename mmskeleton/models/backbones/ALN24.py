@@ -50,9 +50,9 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
     def forward(self, x):  # 这同时也是 Module 中的 forward 功能
         # 正向传播输入值, 神经网络分析出输出值
-
+        N,  T, F  = x.size()
         x = self.conv1(x)
-        x = x.view(-1, 375)
+        x = x.view(N ,-1)
         x = self.anet(x)
         return torch.sigmoid(x)
 
@@ -124,7 +124,7 @@ class ST_GCN_ALN24(nn.Module):
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
         # self.ALN = ANet(150,800, 625)
-        self.ALN = ANet(1400,1600,1800, 625*3)
+        self.ALN = ANet(1500,1600,1800, 625*3)
     def forward(self, x):
         # data normalization
         N, C, T, V, M = x.size()

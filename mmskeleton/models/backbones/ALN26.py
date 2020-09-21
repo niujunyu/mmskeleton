@@ -6,7 +6,7 @@ from torch.autograd import Variable
 from mmskeleton.ops.st_gcn import ConvTemporalGraphicalBatchA, Graph
 
 """
-change from 22
+change from 21
 A矩阵对称版本  
 A  3*25*25
 a.triu  !!!!
@@ -14,8 +14,8 @@ a.triu  !!!!
 
 
 
-change the t 压缩 5-》20
-
+add relu in con1  swoitch relu and dropout add bn in
+change the drop out to 0.3
 """
 
 def zero(x):
@@ -27,40 +27,38 @@ def iden(x):
 
 
 class ANet(torch.nn.Module):  # 继承 torch 的 Module
-    def __init__(self, n_feature, n_hidden1, n_hidden2 , n_output,dropout_value=0.3):
+    def __init__(self, n_feature, n_hidden, n_output,dropout_value=0.3):
         super(ANet, self).__init__()  # 继承 __init__ 功能
         # 定义每层用什么样的形式
-
+        self.conv1 = nn.Conv1d(in_channels=300, out_channels=5, kernel_size=1)
         self.anet = nn.Sequential(
             nn.BatchNorm1d(n_feature),
             nn.ReLU(inplace=True),
 
-            nn.Linear(n_feature, n_hidden1),
+            nn.Linear(n_feature, n_hidden),
             nn.ReLU(inplace=True),
             nn.Dropout(dropout_value),
 
-            nn.Linear(n_hidden1, n_hidden2),
+            nn.Linear(n_hidden, n_hidden),
             nn.ReLU(inplace=True),
             nn.Dropout(dropout_value),
 
-            nn.Linear(n_hidden2, n_output),
+            nn.Linear(n_hidden, n_output),
 
         )
 # 输出层线性输出
 
     def forward(self, x):  # 这同时也是 Module 中的 forward 功能
         # 正向传播输入值, 神经网络分析出输出值
-        N,  T, F  = x.size()
 
-        x = x[:,::20,:]
-
-        x = x.contiguous().view(N,-1)
+        x = self.conv1(x)
+        x = x.view(-1, 375)
         x = self.anet(x)
         return torch.sigmoid(x)
 
 
 
-class ST_GCN_ALN25(nn.Module):
+class ST_GCN_ALN26(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
@@ -96,8 +94,8 @@ class ST_GCN_ALN25(nn.Module):
         self.register_buffer('A', A)
 
         # build networks
-        spatial_kernel_size = 3
-        temporal_kernel_size = 7
+        spatial_kernel_size = 4
+        temporal_kernel_size = 9
         kernel_size = (temporal_kernel_size, spatial_kernel_size)
         self.data_bn = nn.BatchNorm1d(in_channels *
                                       A.size(1)) if data_bn else iden
@@ -121,12 +119,14 @@ class ST_GCN_ALN25(nn.Module):
         ))
 
         # initialize parameters for edge importance weighting
-
+        self.M_weight =  nn.Parameter(torch.Tensor(2))
+        self.M_weight[0] = 0.5
+        self.M_weight[1] = 0.5
 
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
         # self.ALN = ANet(150,800, 625)
-        self.ALN = ANet(15*75,1400,1800, 625*3)
+        self.ALN = ANet(375,1500, 625*4)
     def forward(self, x):
         # data normalization
         N, C, T, V, M = x.size()
@@ -145,9 +145,16 @@ class ST_GCN_ALN25(nn.Module):
         ALN_out = self.ALN(input_ILN)
         # ALN_out = ALN_out.view(N,-1).cuda()
 
-        A = ALN_out.view(N*M,3,25, 25).cuda()
+        A = ALN_out.view(N*M,4,25, 25).cuda()
 
-
+        # index = 0
+        # for i in range(25):
+        #     for j in range(i + 1):
+        #        for n in range(N*M):
+        #             A[n][i][j] = ALN_out[n][index]
+        #             if (i != j): A[n][j][i] = ALN_out[n][index]
+        #        index += 1
+        # A=A.view(-1, 1, 25, 25).cuda()
 
         # forward
         for gcn in  self.st_gcn_networks:
@@ -156,7 +163,8 @@ class ST_GCN_ALN25(nn.Module):
         # global pooling
         x = F.avg_pool2d(x, x.size()[2:])
         x = x.view(N, M, -1, 1, 1).mean(dim=1)
-
+        x=x[:,0,:,:,:]* self.M_weight[0] + x[:,1,:,:,:]* self.M_weight[1]
+        x = x.view(N, -1, 1, 1)
         # prediction
         x = self.fcn(x)
         x = x.view(x.size(0), -1)
