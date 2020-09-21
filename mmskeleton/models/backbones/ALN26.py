@@ -119,14 +119,24 @@ class ST_GCN_ALN26(nn.Module):
         ))
 
         # initialize parameters for edge importance weighting
-        self.M_weight =  nn.Parameter(torch.Tensor(2))
+        self.M_weight =  nn.Parameter(torch.ones(2).view(2),requires_grad=True).cuda()
         self.M_weight[0] = 0.5
         self.M_weight[1] = 0.5
+
+
 
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
         # self.ALN = ANet(150,800, 625)
         self.ALN = ANet(375,1500, 625*4)
+
+
+
+        self.convm = torch.nn.Conv1d(in_channels=2, out_channels=1, kernel_size=1)
+        ones = torch.Tensor(torch.ones((1, 2, 1)))
+        ones[0, 1, 0] = 0.5
+        ones[0, 0, 0] = 0.5
+        self.convm.weight = torch.nn.Parameter(ones)
     def forward(self, x):
         # data normalization
         N, C, T, V, M = x.size()
@@ -162,8 +172,8 @@ class ST_GCN_ALN26(nn.Module):
 
         # global pooling
         x = F.avg_pool2d(x, x.size()[2:])
-        x = x.view(N, M, -1, 1, 1).mean(dim=1)
-        x=x[:,0,:,:,:]* self.M_weight[0] + x[:,1,:,:,:]* self.M_weight[1]
+        x = x.view(N, M, -1)
+        x = self.convm(x)
         x = x.view(N, -1, 1, 1)
         # prediction
         x = self.fcn(x)
