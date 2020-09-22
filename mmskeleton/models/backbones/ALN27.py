@@ -69,11 +69,11 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
         afterconv = self.conv1(x)
         afterconv = afterconv.view(N ,-1)
-        A1 = torch.sigmoid(self.anet(afterconv))
+        A1 = torch.sigmoid(self.convFC(afterconv))
 
-        sliced = x[:,::20,:]
+        sliced = x[:,::15,:]
         sliced = sliced.contiguous().view(N,-1)
-        A2 =  torch.sigmoid(self.anet(sliced))
+        A2 =  torch.sigmoid(self.sliceFC(sliced))
 
         A = torch.cat((A1,A2),dim=1)
         return A
@@ -86,7 +86,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
 
 
-class ST_GCN_ALN22(nn.Module):
+class ST_GCN_ALN27(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
