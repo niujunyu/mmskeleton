@@ -50,11 +50,13 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
     def forward(self, x):  # 这同时也是 Module 中的 forward 功能
         # 正向传播输入值, 神经网络分析出输出值
-
+        N, T, F = x.size()
         x = self.conv1(x)
-        x = x.view(-1, 375)
+        x = x.view(N ,-1)
         x = self.anet(x)
         return torch.sigmoid(x)
+
+
 
 
 

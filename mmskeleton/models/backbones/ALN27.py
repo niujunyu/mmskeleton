@@ -7,14 +7,12 @@ from mmskeleton.ops.st_gcn import ConvTemporalGraphicalBatchA, Graph
 
 """
 change from 22
-A矩阵对称版本  
-A  3*25*25
-a.triu  !!!!
 
 
 
 
-add conv on M
+
+A由两部分组成
 """
 
 def zero(x):
@@ -23,41 +21,72 @@ def zero(x):
 
 def iden(x):
     return x
-
+# 375,1500, 625*4
 
 class ANet(torch.nn.Module):  # 继承 torch 的 Module
-    def __init__(self, n_feature, n_hidden, n_output,dropout_value=0.3):
+    def __init__(self, conv_feature=75*5 , conv_hidden = 1000, conv_output = 625*2
+                 ,FC_feature = 20*75 ,FC_hidden1 = 1400 ,FC_hidden2=1300,FC_output = 625*2 ,dropout_value=0.3):
         super(ANet, self).__init__()  # 继承 __init__ 功能
         # 定义每层用什么样的形式
         self.conv1 = nn.Conv1d(in_channels=300, out_channels=5, kernel_size=1)
-        self.anet = nn.Sequential(
-            nn.BatchNorm1d(n_feature),
+
+        self.convFC = nn.Sequential(
+            nn.BatchNorm1d(conv_feature),
             nn.ReLU(inplace=True),
 
-            nn.Linear(n_feature, n_hidden),
-            nn.ReLU(inplace=True),
-            nn.Dropout(dropout_value),
-
-            nn.Linear(n_hidden, n_hidden),
+            nn.Linear(conv_feature, conv_hidden),
             nn.ReLU(inplace=True),
             nn.Dropout(dropout_value),
 
-            nn.Linear(n_hidden, n_output),
+            nn.Linear(conv_hidden, conv_hidden),
+            nn.ReLU(inplace=True),
+            nn.Dropout(dropout_value),
+
+            nn.Linear(conv_hidden, conv_output),
 
         )
+        self.sliceFC = nn.Sequential(
+            nn.BatchNorm1d(FC_feature),
+            nn.ReLU(inplace=True),
+
+            nn.Linear(FC_feature, FC_hidden1),
+            nn.ReLU(inplace=True),
+            nn.Dropout(dropout_value),
+
+            nn.Linear(FC_hidden1, FC_hidden2),
+            nn.ReLU(inplace=True),
+            nn.Dropout(dropout_value),
+
+            nn.Linear(FC_hidden2, FC_output),
+
+        )
+
 # 输出层线性输出
 
     def forward(self, x):  # 这同时也是 Module 中的 forward 功能
         # 正向传播输入值, 神经网络分析出输出值
         N, T, F = x.size()
-        x = self.conv1(x)
-        x = x.view(N ,-1)
-        x = self.anet(x)
-        return torch.sigmoid(x)
+
+        afterconv = self.conv1(x)
+        afterconv = afterconv.view(N ,-1)
+        A1 = torch.sigmoid(self.anet(afterconv))
+
+        sliced = x[:,::20,:]
+        sliced = sliced.contiguous().view(N,-1)
+        A2 =  torch.sigmoid(self.anet(sliced))
+
+        A = torch.cat((A1,A2),dim=1)
+        return A
 
 
 
-class ST_GCN_ALN26(nn.Module):
+
+
+
+
+
+
+class ST_GCN_ALN22(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
@@ -118,24 +147,12 @@ class ST_GCN_ALN26(nn.Module):
         ))
 
         # initialize parameters for edge importance weighting
-        self.M_weight =  nn.Parameter(torch.ones(2).view(2),requires_grad=True).cuda()
-        self.M_weight[0] = 0.5
-        self.M_weight[1] = 0.5
-
 
 
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
-        # self.ALN = ANet(150,800, 625)
-        self.ALN = ANet(375,1500, 625*4)
-
-
-
-        self.convm = torch.nn.Conv1d(in_channels=2, out_channels=1, kernel_size=1)
-        ones = torch.Tensor(torch.ones((1, 2, 1)))
-        ones[0, 1, 0] = 0.5
-        ones[0, 0, 0] = 0.5
-        self.convm.weight = torch.nn.Parameter(ones)
+        # self.ALN = ANet(375,1500, 625*4)
+        self.ALN = ANet()
     def forward(self, x):
         # data normalization
         N, C, T, V, M = x.size()
@@ -171,9 +188,8 @@ class ST_GCN_ALN26(nn.Module):
 
         # global pooling
         x = F.avg_pool2d(x, x.size()[2:])
-        x = x.view(N, M, -1)
-        x = self.convm(x)
-        x = x.view(N, -1, 1, 1)
+        x = x.view(N, M, -1, 1, 1).mean(dim=1)
+
         # prediction
         x = self.fcn(x)
         x = x.view(x.size(0), -1)
