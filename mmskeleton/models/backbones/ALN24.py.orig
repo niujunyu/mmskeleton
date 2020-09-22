@@ -30,7 +30,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
     def __init__(self, n_feature, n_hidden1, n_hidden2 , n_output,dropout_value=0.3):
         super(ANet, self).__init__()  # 继承 __init__ 功能
         # 定义每层用什么样的形式
-
+        self.conv1 = nn.Conv1d(in_channels=300, out_channels=20, kernel_size=1)
         self.anet = nn.Sequential(
             nn.BatchNorm1d(n_feature),
             nn.ReLU(inplace=True),
@@ -50,17 +50,21 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
     def forward(self, x):  # 这同时也是 Module 中的 forward 功能
         # 正向传播输入值, 神经网络分析出输出值
+<<<<<<< HEAD
         N,  T, F  = x.size()
-
-        x = x[:,::20,:]
-
-        x = x.contiguous().view(N,-1)
+        x = self.conv1(x)
+        x = x.view(N ,-1)
+=======
+        N, T, F = x.size()
+        x = self.conv1(x)
+        x = x.view(N, -1)
+>>>>>>> ef9c22253cfcb5c305adeed86660492d2f752c35
         x = self.anet(x)
         return torch.sigmoid(x)
 
 
 
-class ST_GCN_ALN25(nn.Module):
+class ST_GCN_ALN24(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
@@ -126,7 +130,7 @@ class ST_GCN_ALN25(nn.Module):
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
         # self.ALN = ANet(150,800, 625)
-        self.ALN = ANet(15*75,1400,1800, 625*3)
+        self.ALN = ANet(1500,1600,1800, 625*3)
     def forward(self, x):
         # data normalization
         N, C, T, V, M = x.size()
