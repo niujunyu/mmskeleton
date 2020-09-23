@@ -87,7 +87,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
 
 
-class ST_GCN_ALN29(nn.Module):
+class ST_GCN_ALN30(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
@@ -170,7 +170,8 @@ class ST_GCN_ALN29(nn.Module):
         input_ILN = x.permute(0, 2, 1, 3).contiguous()
         input_ILN=input_ILN.view(N*M,T,C*V)
         convA,sliceA = self.ALN(input_ILN)
-        A = torch.cat((self.A,convA,sliceA),dim=1)
+        uniA = self.A.view(1,1,25,25).repeat(N*M,1,1,1)
+        A = torch.cat((uniA,convA,sliceA),dim=1)
         # ALN_out = ALN_out.view(N,-1).cuda()
 
 

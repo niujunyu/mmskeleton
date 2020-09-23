@@ -171,7 +171,7 @@ class ST_GCN_ALN29(nn.Module):
         ALN_out = self.ALN(input_ILN)
         # ALN_out = ALN_out.view(N,-1).cuda()
 
-        A = ALN_out.view(N*M,4,25, 25).cuda()
+        A = ALN_out.view(N*M,2,25, 25).cuda()
 
         # index = 0
         # for i in range(25):
