@@ -5,6 +5,17 @@ from torch.autograd import Variable
 
 from mmskeleton.ops.st_gcn import ConvTemporalGraphical, Graph
 
+"""
+change from origin
+
+
+
+
+ 
+A  3*25*25  all ones
+"""
+
+
 
 def zero(x):
     return 0
@@ -14,7 +25,7 @@ def iden(x):
     return x
 
 
-class ST_GCN_18(nn.Module):
+class ST_GCN_ALN31(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
@@ -98,7 +109,7 @@ class ST_GCN_18(nn.Module):
 
         # forward
         for gcn, importance in zip(self.st_gcn_networks, self.edge_importance):
-            x, _ = gcn(x, self.A * importance)
+            x, _ = gcn(x,  importance)
 
         # global pooling
         x = F.avg_pool2d(x, x.size()[2:])

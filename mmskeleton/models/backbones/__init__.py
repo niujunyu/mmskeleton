@@ -1,4 +1,4 @@
-from .st_gcn_aaai18 import ST_GCN_18,ST_GCN_niu,ST_GCN_ones,ST_GCN_learnimportance1
+from .st_gcn_aaai18 import ST_GCN_18,ST_GCN_learnimportance1
 from .st_gcn_LIN2 import ST_GCN_LIN2
 from .st_gcn_LIN3 import ST_GCN_LIN3
 from .ALN import ST_GCN_ALN
@@ -33,4 +33,6 @@ from .ALN27 import ST_GCN_ALN27
 from .ALN28 import ST_GCN_ALN28
 from .ALN29 import ST_GCN_ALN29
 from .ALN30 import ST_GCN_ALN30
+from .ALN31 import ST_GCN_ALN31
+from .ALN32 import ST_GCN_ALN32
 from .hrnet import HRNet
