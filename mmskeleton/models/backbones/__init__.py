@@ -39,4 +39,7 @@ from .ALN32 import ST_GCN_ALN32
 from .ALN33 import ST_GCN_ALN33
 from .ALN34 import ST_GCN_ALN34
 from .ALN35 import ST_GCN_ALN35
+from .ALN36 import ST_GCN_ALN36
+from .ALN37 import ST_GCN_ALN37
+from .ALN38 import ST_GCN_ALN38
 from .hrnet import HRNet
