@@ -95,7 +95,7 @@ class ST_GCN_ALN35(nn.Module):
         self.register_buffer('A', A)
 
         # build networks
-        spatial_kernel_size = 4
+        spatial_kernel_size = 3
         temporal_kernel_size = 9
         kernel_size = (temporal_kernel_size, spatial_kernel_size)
         self.data_bn = nn.BatchNorm1d(in_channels *
@@ -128,7 +128,7 @@ class ST_GCN_ALN35(nn.Module):
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
         # self.ALN = ANet(150,800, 625)
-        self.ALN = ANet(375,1500, 625*4)
+        # self.ALN = ANet(375,1500, 625*4)
 
 
 
@@ -136,8 +136,8 @@ class ST_GCN_ALN35(nn.Module):
         self.convm.weight.requires_grad = False
 
         self.ones = torch.Tensor(torch.ones((1, 2, 1))).cuda()
-        self.ones[0, 0, 0] = 0.8
-        self.ones[0, 1, 0] = 0.2
+        self.ones[0, 0, 0] = 0.5
+        self.ones[0, 1, 0] = 0.5
 
 
 
