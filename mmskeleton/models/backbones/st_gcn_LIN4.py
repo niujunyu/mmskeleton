@@ -13,10 +13,8 @@ def zero(x):
 def iden(x):
     return x
 
-
-
 class ANet(torch.nn.Module):  # 继承 torch 的 Module
-    def __init__(self, n_feature = 75*5, n_hidden = 600, n_output=75,dropout_value=0.3):
+    def __init__(self, n_feature = 75*5, n_hidden = 600, n_output=25,dropout_value=0.3):
         super(ANet, self).__init__()  # 继承 __init__ 功能
         # 定义每层用什么样的形式
         self.conv1 = nn.Conv1d(in_channels=300, out_channels=5, kernel_size=1)
@@ -46,7 +44,8 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
         return torch.sigmoid(x)
 
 
-class ST_GCN_LIN3(nn.Module):
+
+class LIN4(nn.Module):
     """
     add drop out in ANET
 
@@ -122,14 +121,25 @@ class ST_GCN_LIN3(nn.Module):
         # self.Anet=ANet(K*V*V,K*V*V*3,K*V*V)
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
-        self.ILN = ANet(150,400, 25)
+        self.ILN = ANet()
+
     def forward(self, x):
         # data normalization
+
+        #
+        # input_ILN = x.mean(dim=2).view(N,-1)
+        # importance = self.ILN(input_ILN)
+        #
         N, C, T, V, M = x.size()
 
-        input_ILN = x.mean(dim=2).view(N,-1)
-        importance = self.ILN(input_ILN)
-        x=torch.cat((x,importance.unsqueeze(1).unsqueeze(1).unsqueeze(4).expand(N,1,T,V,M)),dim=1)
+        input_ILN = x.permute(0, 4,2, 1, 3).contiguous()
+        input_ILN=input_ILN.view(N*M,T,C*V)
+        ALN_out = self.ILN(input_ILN)
+        # ALN_out = ALN_out.view(N,-1).cuda()
+
+        X_importance = ALN_out.view(N , M, 1, 1, 25).repeat(1,1, 300,1 , 1).permute(0,3,2,4,1).cuda()
+        x = torch.cat((x, X_importance), dim=1)
+
         N, C, T, V, M = x.size()
         x = x.permute(0, 4, 3, 1, 2).contiguous()
         x = x.view(N * M, V * C, T)
@@ -137,6 +147,8 @@ class ST_GCN_LIN3(nn.Module):
         x = x.view(N, M, V, C, T)
         x = x.permute(0, 1, 3, 4, 2).contiguous()
         x = x.view(N * M, C, T, V)
+
+
 
 
 
@@ -164,6 +176,7 @@ class ST_GCN_LIN3(nn.Module):
         x = x.view(N, M, V, C, T)
         x = x.permute(0, 1, 3, 4, 2).contiguous()
         x = x.view(N * M, C, T, V)
+
 
         # forwad
         for gcn in self.st_gcn_networks:
