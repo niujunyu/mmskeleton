@@ -177,9 +177,9 @@ class ST_GCN_ALN39(nn.Module):
 
         # forward
         for gcn, importance in zip(self.st_gcn_networks, self.edge_importance):
+            importance=importance.view(1,3,25,25).repeat(N*M,1,1,1)
             x, _ = gcn(x, self.A * importance)
 
-        # global pooling
         x = F.avg_pool2d(x, x.size()[2:])
         x = x.view(N, M, -1)
         self.convm.weight = torch.nn.Parameter(self.ones)
