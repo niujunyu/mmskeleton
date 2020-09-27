@@ -45,4 +45,7 @@ from .ALN38 import ST_GCN_ALN38
 from .ALN39 import ST_GCN_ALN39
 from .ALN40 import ST_GCN_ALN40
 from .ALN41 import ST_GCN_ALN41
+from .ALN42 import ST_GCN_ALN42
+from .ALN43 import ST_GCN_ALN43
+from .ALN44 import ST_GCN_ALN44
 from .hrnet import HRNet

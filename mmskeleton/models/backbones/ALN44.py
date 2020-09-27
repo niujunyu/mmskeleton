@@ -6,7 +6,7 @@ from torch.autograd import Variable
 from mmskeleton.ops.st_gcn import ConvTemporalGraphicalBatchA, Graph
 
 """
-change from 35
+change from 40
 A矩阵对称版本  
 A  3*25*25
 a.triu  !!!!
@@ -20,7 +20,7 @@ add conv on M but conv's parameter can not be bp
 
 加 mask
 
-tempal kernal 9 ===》 7
+tempal kernal 9 ===》 11
 """
 
 def zero(x):
@@ -63,7 +63,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
 
 
-class ST_GCN_ALN40(nn.Module):
+class ST_GCN_ALN44(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
@@ -100,7 +100,7 @@ class ST_GCN_ALN40(nn.Module):
 
         # build networks
         spatial_kernel_size = 3
-        temporal_kernel_size = 7
+        temporal_kernel_size = 11
         kernel_size = (temporal_kernel_size, spatial_kernel_size)
         self.data_bn = nn.BatchNorm1d(in_channels *
                                       A.size(1)) if data_bn else iden
