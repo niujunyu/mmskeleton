@@ -55,7 +55,7 @@ class MyLeakyRelu(torch.autograd.function.Function):
     @staticmethod
     def forward(ctx, i):
         output = i
-        output[output < 0.3] = output*0.01
+        output[output < 0.3] = output[output < 0.3]*0.01
         ctx.save_for_backward(i)
         return output
 
@@ -63,7 +63,7 @@ class MyLeakyRelu(torch.autograd.function.Function):
     @staticmethod
     def backward(ctx, grad_output):
         i, = ctx.saved_tensors
-        grad_output[i < 0.3] = 0.01*grad_output
+        grad_output[i < 0.3] = 0.01*grad_output[i < 0.3]
         return grad_output
 
 
