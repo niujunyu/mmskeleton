@@ -56,8 +56,10 @@ class MyLeakyRelu(torch.autograd.function.Function):
         result = i.clone()
         result[result > 0.3] = 1
         result[result < 0.3] = 0.01
+        result1= result.clone()
+        result1[result1 < 0.3] = 0
         ctx.save_for_backward(result)
-        return result * i
+        return result1 * i
 
     @staticmethod
     def backward(ctx, grad_output):
