@@ -67,20 +67,35 @@ def iden(x):
 #
 #         return grad_output * result
 
-class MyRelu(torch.autograd.function.Function):
+class MyRelu(torch.autograd.Function):
+
 
     @staticmethod
     def forward(ctx, i):
-        ctx.save_for_backward(i)
-        output = i.clamp(min=0.3)
-        return output
+        result = 0 if i<0.3 else 1
+        ctx.save_for_backward(result)
+
+        return result*i
+
 
     @staticmethod
+
+
     def backward(ctx, grad_output):
-        i, = ctx.saved_tensors
-        grad_input = grad_output.clone()
-        grad_input[i < 0.3] = 0
-        return grad_output * i
+        result, = ctx.saved_tensors
+        return grad_output*result
+    # @staticmethod
+    # def forward(ctx, i):
+    #     ctx.save_for_backward(i)
+    #     output = i.clamp(min=0.3)
+    #     return output
+    #
+    # @staticmethod
+    # def backward(ctx, grad_output):
+    #     i, = ctx.saved_tensors
+    #     grad_input = grad_output.clone()
+    #     grad_input[i < 0.3] = 0
+    #     return grad_output * i
 
 
 class ANet(torch.nn.Module):  # 继承 torch 的 Module
