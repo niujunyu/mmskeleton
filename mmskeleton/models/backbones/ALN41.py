@@ -57,7 +57,11 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
         x = self.anet(x).view(N,4,25, 25)
         x = torch.relu(x )
         x=torch.softmax(x, dim = 3)
+
         x = torch.relu(x-0.1)
+        torch.set_printoptions(precision=None, threshold=10000, edgeitems=None, linewidth=None, profile=None,sci_mode=False)
+        print(x.sum(dim=3))
+        print(x)
 
 
         return x
