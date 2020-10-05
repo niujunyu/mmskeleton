@@ -51,21 +51,18 @@ def iden(x):
 
 
 class MyLeakyRelu(torch.autograd.function.Function):
-
     @staticmethod
     def forward(ctx, i):
-        output = i
-        output[output < 0.3] = output[output < 0.3]*0.01
-        ctx.save_for_backward(i)
-        return output
-
+        result = i.clone()
+        result[result > 0.3] = 1
+        result[result < 0.3] = 0.01
+        ctx.save_for_backward(result)
+        return result * i
 
     @staticmethod
     def backward(ctx, grad_output):
-        i, = ctx.saved_tensors
-        grad_output[i < 0.3] = 0.01*grad_output[i < 0.3]
-        return grad_output
-
+        result, = ctx.saved_tensors
+        return grad_output * result
 
 #
 # class MyLeakyReLU(torch.autograd.Function):
