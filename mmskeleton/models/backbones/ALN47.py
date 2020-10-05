@@ -75,8 +75,8 @@ class MyRelu(torch.autograd.function.Function):
     @staticmethod
     def forward(ctx, i):
         ctx.save_for_backward(i)
-        output = i
-        output[output < 0.3] = 0
+        output = i.clone()
+        output[i < 0.3] = 0
         return output
 
     @staticmethod
