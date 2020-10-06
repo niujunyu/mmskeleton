@@ -6,7 +6,7 @@ from torch.autograd import Variable
 from mmskeleton.ops.st_gcn import ConvTemporalGraphicalBatchA, Graph
 
 """
-change from 36
+change from 48
 A矩阵对称版本  
 A  3*25*25
 a.triu  !!!!
@@ -20,6 +20,8 @@ matrix A is a sparse matrix use a spacial way to do relu
 
 change the activate function to a new handed write function  
 debug leakyrelu
+
+every layer use a new net
 """
 
 def zero(x):
@@ -126,7 +128,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
 
 
-class ST_GCN_ALN50(nn.Module):
+class ST_GCN_ALN51(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
@@ -186,17 +188,24 @@ class ST_GCN_ALN50(nn.Module):
             st_gcn_block(256, 256, kernel_size, 1, **kwargs),
         ))
 
-        self.edge_importance = nn.ParameterList([
-            nn.Parameter(torch.ones(4,25,25))
-            for i in self.st_gcn_networks
-        ])
         # initialize parameters for edge importance weighting
 
-
+        self.ALNS = nn.ModuleList((
+            ANet(375,1500, 625*4),
+            ANet(375, 1500, 625 * 4),
+            ANet(375, 1500, 625 * 4),
+            ANet(375, 1500, 625 * 4),
+            ANet(375, 1500, 625 * 4),
+            ANet(375, 1500, 625 * 4),
+            ANet(375, 1500, 625 * 4),
+            ANet(375, 1500, 625 * 4),
+            ANet(375, 1500, 625 * 4),
+            ANet(375, 1500, 625 * 4),
+        ))
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
         # self.ALN = ANet(150,800, 625)
-        self.ALN = ANet(375,1500, 625*4)
+
     def forward(self, x):
         # data normalization
         N, C, T, V, M = x.size()
@@ -212,10 +221,9 @@ class ST_GCN_ALN50(nn.Module):
         # input_ILN = x.mean(dim=2).view(N*M, -1)
         input_ILN = x.permute(0, 2, 1, 3).contiguous()
         input_ILN=input_ILN.view(N*M,T,C*V)
-        ALN_out = self.ALN(input_ILN)
+
         # ALN_out = ALN_out.view(N,-1).cuda()
 
-        A = ALN_out.cuda()
 
         # index = 0
         # for i in range(25):
@@ -227,9 +235,10 @@ class ST_GCN_ALN50(nn.Module):
         # A=A.view(-1, 1, 25, 25).cuda()
 
         # forward
-        for gcn, importance in zip(self.st_gcn_networks, self.edge_importance):
-            x, _ = gcn(x, A * importance)
-
+        for gcn, ALN in zip(self.st_gcn_networks, self.ALNS):
+            ALN_out = ALN(input_ILN)
+            A = ALN_out.view(N * M, 4, 25, 25).cuda()
+            x, _ = gcn(x, A)
 
         # global pooling
         x = F.avg_pool2d(x, x.size()[2:])
