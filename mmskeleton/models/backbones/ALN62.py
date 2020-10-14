@@ -114,7 +114,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
         N, T, F = x.size()
         x = self.conv1(x)
         x = x.view(N ,-1)
-        x = self.anet(x).view(N,2,25, 25)
+        x = self.anet(x).view(N,5,25, 25)
 
         x=torch.softmax(x, dim = 3)
         x = MyLeakyRelu.apply(x)
@@ -126,7 +126,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
 
 
-class ST_GCN_ALN61(nn.Module):
+class ST_GCN_ALN62(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
@@ -196,7 +196,7 @@ class ST_GCN_ALN61(nn.Module):
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
         # self.ALN = ANet(150,800, 625)
-        self.ALN = ANet(375,1500, 625*2)
+        self.ALN = ANet(375,1500, 625*5)
     def forward(self, x):
         # data normalization
         N, C, T, V, M = x.size()
@@ -214,12 +214,8 @@ class ST_GCN_ALN61(nn.Module):
         input_ILN=input_ILN.view(N*M,T,C*V)
         ALN_out = self.ALN(input_ILN)
         # ALN_out = ALN_out.view(N,-1).cuda()
-        A_uni = self.A.repeat(N*M,1,1).view(N*M,1,25,25);
-        A_learned=ALN_out.cuda()
-        # print(A_uni.shape)
-        # print(A_learned.shape)
 
-        A=torch.cat((A_learned,A_uni) ,dim=1)
+        A = ALN_out.cuda()
 
         # index = 0
         # for i in range(25):
