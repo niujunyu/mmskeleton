@@ -19,14 +19,14 @@ processor_cfg:
 
   # model setting
   model_cfg:
-    type: 'models.backbones.ST_GCN_ALN62'
+    type: 'models.backbones.ST_GCN_ALN63'
     in_channels: 3
     num_class: 60
     dropout: 0.3
 #    edge_importance_weightin: True
     graph_cfg:
       layout: 'ntu-rgb+d'
-      strategy: 'uniform'
+      strategy: 'spatial'
   loss_cfg:
     type: 'torch.nn.CrossEntropyLoss'
 
@@ -57,11 +57,11 @@ processor_cfg:
   workflow: [['train', 1],['val',0]]
   work_dir: 
   log_level: 0
-  total_epochs: 80
+  total_epochs: 40
   training_hooks:
     lr_config:
       policy: 'step'
-      step: [10,30,50]
+      step: [10,20,50]
     log_config:
       interval: 100
       hooks:
