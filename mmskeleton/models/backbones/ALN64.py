@@ -64,31 +64,9 @@ class MyLeakyRelu(torch.autograd.function.Function):
         result, = ctx.saved_tensors
         return grad_output * result
 
-#
-# class MyLeakyReLU(torch.autograd.Function):
-#     @staticmethod
-#     def forward(ctx, input_):
-#         # 在forward中，需要定义MyReLU这个运算的forward计算过程
-#         # 同时可以保存任何在后向传播中需要使用的变量值
-#         self.save_for_backward(input_)         # 将输入保存起来，在backward时使用
-#         output=input_
-#         output [output<0] = output*0.01
-#
-#         return output
-#
-#     @staticmethod
-#     def backward(self, grad_output):
-#         # 根据BP算法的推导（链式法则），dloss / dx = (dloss / doutput) * (doutput / dx)
-#         # dloss / doutput就是输入的参数grad_output、
-#         # 因此只需求relu的导数，在乘以grad_outpu
-#         input_, = self.saved_tensors
-#         grad_input = grad_output.clone()
-#         grad_input[input_ < 0] = 0                # 上诉计算的结果就是左式。即ReLU在反向传播中可以看做一个通道选择函数，所有未达到阈值（激活值<0）的单元的梯度都为0
-#         return grad_input
-
 
 class ANet(torch.nn.Module):  # 继承 torch 的 Module
-    def __init__(self, n_feature, n_hidden, n_output,dropout_value=0.5):
+    def __init__(self, n_feature, n_hidden, n_output,dropout_value=0.3):
         super(ANet, self).__init__()  # 继承 __init__ 功能
         # 定义每层用什么样的形式
         self.conv1 = nn.Conv1d(in_channels=300, out_channels=5, kernel_size=1)
@@ -114,7 +92,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
         N, T, F = x.size()
         x = self.conv1(x)
         x = x.view(N ,-1)
-        x = self.anet(x).view(N,4,25, 25)
+        x = self.anet(x).view(N,3,25, 25)
 
         x=torch.softmax(x, dim = 3)
         x = MyLeakyRelu.apply(x)
@@ -126,7 +104,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
 
 
-class ST_GCN_ALN63(nn.Module):
+class ST_GCN_ALN64(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
@@ -162,7 +140,7 @@ class ST_GCN_ALN63(nn.Module):
         self.register_buffer('A', A)
 
         # build networks
-        spatial_kernel_size = 4
+        spatial_kernel_size = 3
         temporal_kernel_size = 9
         kernel_size = (temporal_kernel_size, spatial_kernel_size)
         self.data_bn = nn.BatchNorm1d(in_channels *
@@ -187,7 +165,7 @@ class ST_GCN_ALN63(nn.Module):
         ))
 
         self.edge_importance = nn.ParameterList([
-            nn.Parameter(torch.ones(4,25,25))
+            nn.Parameter(torch.ones(spatial_kernel_size ,25,25))
             for i in self.st_gcn_networks
         ])
         # initialize parameters for edge importance weighting
@@ -195,8 +173,13 @@ class ST_GCN_ALN63(nn.Module):
 
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
-        # self.ALN = ANet(150,800, 625)
-        self.ALN = ANet(375,1500, 625*4)
+        self.ALN = ANet(375,1500, 625*3)
+        self.convm = torch.nn.Conv1d(in_channels=2, out_channels=1, kernel_size=1)
+        self.convm.weight.requires_grad = False
+
+        self.ones = torch.Tensor(torch.ones((1, 2, 1))).cuda()
+        self.ones[0, 0, 0] = 0.5
+        self.ones[0, 1, 0] = 0.5
     def forward(self, x):
         # data normalization
         N, C, T, V, M = x.size()
@@ -212,25 +195,27 @@ class ST_GCN_ALN63(nn.Module):
         # input_ILN = x.mean(dim=2).view(N*M, -1)
         input_ILN = x.permute(0, 2, 1, 3).contiguous()
         input_ILN=input_ILN.view(N*M,T,C*V)
-        ALN_out = self.ALN(input_ILN)
+        A = self.ALN(input_ILN).cuda()
         # ALN_out = ALN_out.view(N,-1).cuda()
+        A = A +self.A.repeat.view(1,3,25,25).repeat(N*M,1,1,1)
 
-        A = ALN_out.cuda()
 
-        # forward
+
         for gcn, importance in zip(self.st_gcn_networks, self.edge_importance):
             x, _ = gcn(x, A * importance)
 
 
-        # global pooling
         x = F.avg_pool2d(x, x.size()[2:])
-        x = x.view(N, M, -1, 1, 1).mean(dim=1)
-
+        x = x.view(N, M, -1)
+        self.convm.weight = torch.nn.Parameter(self.ones)
+        x = self.convm(x)
+        x = x.view(N, -1, 1, 1)
         # prediction
         x = self.fcn(x)
         x = x.view(x.size(0), -1)
 
         return x
+
 
     def extract_feature(self, x):
 
