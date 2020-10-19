@@ -66,4 +66,5 @@ from .ALN61 import ST_GCN_ALN61
 from .ALN62 import ST_GCN_ALN62
 from .ALN63 import ST_GCN_ALN63
 from .ALN64 import ST_GCN_ALN64
+from .TSA1 import ST_GCN_TSA1
 from .hrnet import HRNet
