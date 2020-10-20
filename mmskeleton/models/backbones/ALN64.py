@@ -197,7 +197,7 @@ class ST_GCN_ALN64(nn.Module):
         input_ILN=input_ILN.view(N*M,T,C*V)
         A = self.ALN(input_ILN).cuda()
         # ALN_out = ALN_out.view(N,-1).cuda()
-        A = A +self.A.repeat.view(1,3,25,25).repeat(N*M,1,1,1)
+        A = A +self.A.view(1,3,25,25).repeat(N*M,1,1,1)
 
 
 
