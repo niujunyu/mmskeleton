@@ -54,8 +54,8 @@ class MyLeakyRelu(torch.autograd.function.Function):
     @staticmethod
     def forward(ctx, i):
         result = i.clone()
-        result[result > 0.3] = 1
-        result[result < 0.3] = 0.01
+        result[result > 0.4] = 1
+        result[result < 0.4] = 0.01
         ctx.save_for_backward(result)
         return result * i
 
@@ -93,8 +93,6 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
         x = self.conv1(x)
         x = x.view(N ,-1)
         x = self.anet(x).view(N,3,25, 25)
-
-        x=torch.softmax(x, dim = 3)
         x = MyLeakyRelu.apply(x)
 
 
@@ -104,7 +102,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
 
 
-class ST_GCN_ALN64(nn.Module):
+class ST_GCN_ALN65(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
@@ -196,9 +194,8 @@ class ST_GCN_ALN64(nn.Module):
         input_ILN = x.permute(0, 2, 1, 3).contiguous()
         input_ILN=input_ILN.view(N*M,T,C*V)
         A = self.ALN(input_ILN).cuda()
-
         # ALN_out = ALN_out.view(N,-1).cuda()
-        A = A +self.A.view(1,3,25,25).repeat(N*M,1,1,1)
+        A = A +self.A.view(1,3,25,25).repeat(N*M,1,1,1)*2
 
 
 
