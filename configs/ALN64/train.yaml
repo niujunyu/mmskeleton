@@ -19,7 +19,7 @@ processor_cfg:
 
   # model setting
   model_cfg:
-    type: 'models.backbones.ST_GCN_ALN60'
+    type: 'models.backbones.ST_GCN_ALN64'
     in_channels: 3
     num_class: 60
     dropout: 0.3
