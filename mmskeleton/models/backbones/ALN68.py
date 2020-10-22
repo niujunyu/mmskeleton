@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
-from mmskeleton.ops.st_gcn import ConvTemporalGraphicalBatchA, Graph,ConvTemporalGraphical
+from mmskeleton.ops.st_gcn import ConvTemporalGraphicalBatchA, Graph,ConvTemporalGraphicalTwoA
 
 """
 change from 36
@@ -83,7 +83,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
 
 
-class ST_GCN_ALN67(nn.Module):
+class ST_GCN_ALN68(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
@@ -143,10 +143,10 @@ class ST_GCN_ALN67(nn.Module):
             st_gcn_block(256, 256, kernel_size, 1, **kwargs),
         ))
 
-        # self.edge_importance = nn.ParameterList([
-        #     nn.Parameter(torch.ones(spatial_kernel_size ,25,25))
-        #     for i in self.st_gcn_networks
-        # ])
+        self.edge_importance = nn.ParameterList([
+            nn.Parameter(torch.ones(spatial_kernel_size ,25,25))
+            for i in self.st_gcn_networks
+        ])
         # # initialize parameters for edge importance weighting
 
 
@@ -175,11 +175,9 @@ class ST_GCN_ALN67(nn.Module):
         input_ILN = x.permute(0, 2, 1, 3).contiguous()
         input_ILN=input_ILN.view(N*M,T,C*V)
         A = self.ALN(input_ILN).cuda()
-        # ALN_out = ALN_out.view(N,-1).cuda()
-        A = A +self.A.view(1,3,25,25).repeat(N*M,1,1,1)
-        for gcn in self.st_gcn_networks:
-            x, _ = gcn(x, A )
 
+        for gcn, importance in zip(self.st_gcn_networks, self.edge_importance):
+            x, _ = gcn(x, self.A * importance,A)
 
 
         x = F.avg_pool2d(x, x.size()[2:])
@@ -252,7 +250,7 @@ class st_gcn_block(nn.Module):
         assert kernel_size[0] % 2 == 1
         padding = ((kernel_size[0] - 1) // 2, 0)
 
-        self.gcn = ConvTemporalGraphicalBatchA(in_channels, out_channels,
+        self.gcn = ConvTemporalGraphicalTwoA(in_channels, out_channels,
                                          kernel_size[1])
 
         self.tcn = nn.Sequential(
@@ -286,10 +284,10 @@ class st_gcn_block(nn.Module):
 
         self.relu = nn.ReLU(inplace=True)
 
-    def forward(self, x, A):
+    def forward(self, x, A,B):
 
         res = self.residual(x)
-        x, A = self.gcn(x, A)
+        x, A = self.gcn(x, A,B)
         x = self.tcn(x) + res
 
         return self.relu(x), A
