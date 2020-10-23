@@ -70,5 +70,6 @@ from .ALN65 import ST_GCN_ALN65
 from .ALN66 import ST_GCN_ALN66
 from .ALN67 import ST_GCN_ALN67
 from .ALN68 import ST_GCN_ALN68
+from .ALN69 import ST_GCN_ALN69
 from .TSA1 import ST_GCN_TSA1
 from .hrnet import HRNet

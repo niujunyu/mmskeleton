@@ -83,7 +83,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
 
 
-class ST_GCN_ALN68(nn.Module):
+class ST_GCN_ALN69(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
@@ -177,7 +177,7 @@ class ST_GCN_ALN68(nn.Module):
         A = self.ALN(input_ILN).cuda()
 
         for gcn, importance in zip(self.st_gcn_networks, self.edge_importance):
-            x, _ = gcn(x, self.A * importance,A,0.5)
+            x, _ = gcn(x, self.A * importance,A,1)
 
 
         x = F.avg_pool2d(x, x.size()[2:])

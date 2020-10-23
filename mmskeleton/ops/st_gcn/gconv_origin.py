@@ -111,7 +111,7 @@ class ConvTemporalGraphicalTwoA(nn.Module):
                               dilation=(t_dilation, 1),
                               bias=bias)
 
-    def forward(self, x, A,B,lamba=0.5):
+    def forward(self, x, A,B,lamba):
         assert A.size(0) == self.kernel_size
 
         x = self.conv(x)
