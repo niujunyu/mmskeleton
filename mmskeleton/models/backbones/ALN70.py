@@ -270,7 +270,7 @@ class st_gcn_block(nn.Module):
         if not residual:
             self.residual = zero
 
-        elif (in_channels == out_channels) and (stride == 1):
+        elif (in_channels == out_channels) and (stride S== 1):
             self.residual = iden
 
         else:
@@ -288,7 +288,6 @@ class st_gcn_block(nn.Module):
 
         res = self.residual(x)
         x, A = self.gcn(x, A,B,lamba)
-        print(lamba)
         x = self.tcn(x) + res
 
         return self.relu(x), A
