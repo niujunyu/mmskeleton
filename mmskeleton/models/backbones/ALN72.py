@@ -57,9 +57,9 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
         x = self.conv1(x)
         x = x.view(N ,-1)
         x = self.anet(x).view(N,3,25, 25)
-        x_arg=torch.zeros(N, 3, 25, 25).cuda().scatter(3, torch.argmax(x, 3).view(N, 3, 25, 1), 1)
+        x_arg=torch.zeros(N, 3, 25, 25).cuda().scatter(3, torch.argmax(x, 3).view(N, 3, 25, 1), 0.5)
         c=x_arg- torch.softmax(x, 3)
-        return (torch.softmax(x, 3)+c)/3
+        return torch.softmax(x, 3)+c
 
 
 
