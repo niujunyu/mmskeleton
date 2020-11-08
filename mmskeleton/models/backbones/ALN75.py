@@ -66,8 +66,8 @@ class ST_GCN_ALN75(nn.Module):
 
         A_= torch.zeros((1,25,25),dtype=torch.float32, requires_grad=False)
         for s in sysmme:
-            A[0][s[0]][s[1]]=  0.3
-            A[0][s[1]][s[0]] = 0.3
+            A[0][s[0]-1][s[1]-1]=  0.3
+            A[0][s[1]-1][s[0]-1] = 0.3
 
 
         A=torch.cat((A,A_),0)
