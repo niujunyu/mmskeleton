@@ -73,7 +73,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
         N, T, F = x.size()
         x = self.conv1(x)
         x = x.view(N ,-1)
-        x = self.anet(x).view(N,3,25, 25)
+        x = self.anet(x).view(N,2,25, 25)
         x = torch.softmax(x, dim=3)
         x = MyLeakyRelu.apply(x)
 
@@ -126,7 +126,7 @@ class ST_GCN_ALN76(nn.Module):
         self.register_buffer('A', A)
 
         # build networks
-        spatial_kernel_size = 4
+        spatial_kernel_size = 3
         temporal_kernel_size = 9
         kernel_size = (temporal_kernel_size, spatial_kernel_size)
         self.data_bn = nn.BatchNorm1d(in_channels *
