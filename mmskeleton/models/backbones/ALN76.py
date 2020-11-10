@@ -78,7 +78,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
         x = MyLeakyRelu.apply(x)
 
         sysmme = [[9,5],[6,10],[7,11],[12,8],[22,25],[23,24],[13,17],[14,18],[19,15],[20,16]]
-        A_= torch.zeros((1,1,25,25),dtype=torch.float32, requires_grad=False)
+        A_= torch.zeros((1,1,25,25),dtype=torch.float32, requires_grad=False).cuda()
         for s in sysmme:
             A_[0][0][s[0]-1][s[1]-1]=  0.3
             A_[0][0][s[1]-1][s[0]-1] = 0.3
