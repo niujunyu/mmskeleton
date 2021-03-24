@@ -191,9 +191,9 @@ class ST_GCN_NALN1(nn.Module):
         input_ILN=input_ILN.view(N*M,T,C*V)
         A,a = self.ALN(input_ILN).cuda()
         a=a.view(N * M,1,300,1)
+        x=x*a
         for gcn, importance in zip(self.st_gcn_networks, self.edge_importance):
-            x, _ = gcn(x*a, self.A * importance,A,0.5)
-        print((x*a).size())
+            x, _ = gcn(x, self.A * importance,A,0.5)
 
         x = F.avg_pool2d(x, x.size()[2:])
         x = x.view(N, M, -1)
