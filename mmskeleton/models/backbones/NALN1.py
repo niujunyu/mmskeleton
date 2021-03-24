@@ -87,8 +87,9 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
         N, T, F = x.size()
         x = self.conv1(x)
         x = x.view(N ,-1)
-        x = self.anet(x).view(N,3,25, 25)
         a = self.attension(x).view(N,300)
+        x = self.anet(x).view(N,3,25, 25)
+        
         x = torch.softmax(x, dim=3)
         x = MyLeakyRelu.apply(x)
 
@@ -189,7 +190,9 @@ class ST_GCN_NALN1(nn.Module):
         # input_ILN = x.mean(dim=2).view(N*M, -1)
         input_ILN = x.permute(0, 2, 1, 3).contiguous()
         input_ILN=input_ILN.view(N*M,T,C*V)
-        A,a = self.ALN(input_ILN).cuda()
+        A,a = self.ALN(input_ILN)
+        A=A.cuda()
+        a=a.cuda()
         a=a.view(N * M,1,300,1)
         x=x*a
         for gcn, importance in zip(self.st_gcn_networks, self.edge_importance):
