@@ -65,7 +65,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
             nn.Linear(n_hidden, n_output),
         )
-        )
+    
 
 # 输出层线性输出
 
