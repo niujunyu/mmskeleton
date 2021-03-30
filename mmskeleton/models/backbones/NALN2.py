@@ -155,7 +155,7 @@ class ST_GCN_NALN2(nn.Module):
 
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
-        self.ALN = ANet(375,1200, 625*3)
+        self.ALN = ANet(375,1200, 625*3+300)
         self.convm = torch.nn.Conv1d(in_channels=2, out_channels=1, kernel_size=1)
         self.convm.weight.requires_grad = False
 
