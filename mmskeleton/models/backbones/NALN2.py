@@ -74,7 +74,6 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
         N, T, F = x.size()
         x = self.conv1(x)
         x = x.view(N ,-1)
-        a = self.attension(x).view(N,300)
         x = self.anet(x).view(N,-1)
         splited_x,a=torch.split(x,[3*25*25,300],dim=1)
         splited_x=splited_x.view(N,3,25, 25)
