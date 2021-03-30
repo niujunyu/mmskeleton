@@ -75,12 +75,13 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
         x = self.conv1(x)
         x = x.view(N ,-1)
         x = self.anet(x).view(N,-1)
+  
         splited_x,a=torch.split(x,[3*25*25,300],dim=1)
         splited_x=splited_x.view(N,3,25, 25)
         splited_x = torch.softmax(splited_x, dim=3)
         splited_x = MyLeakyRelu.apply(splited_x)
         a=torch.sigmoid(a).view(N,300)
-        return x,a
+        return splited_x,a
 
 
 
@@ -146,10 +147,10 @@ class ST_GCN_NALN2(nn.Module):
             st_gcn_block(256, 256, kernel_size, 1, **kwargs),
         ))
 
-        self.edge_importance = nn.ParameterList([
-            nn.Parameter(torch.ones(spatial_kernel_size ,25,25))
-            for i in self.st_gcn_networks
-        ])
+    #    self.edge_importance = nn.ParameterList([
+    #        nn.Parameter(torch.ones(spatial_kernel_size ,25,25))
+    #        for i in self.st_gcn_networks
+     #   ])
         # # initialize parameters for edge importance weighting
 
 
@@ -182,8 +183,9 @@ class ST_GCN_NALN2(nn.Module):
         a=a.cuda()
         a=a.view(N * M,1,300,1)
         x=x*a
-        for gcn, importance in zip(self.st_gcn_networks, self.edge_importance):
-            x, _ = gcn(x, self.A * importance,A,0.5)
+        
+        for gcn in self.st_gcn_networks:
+            x, _ = gcn(x, self.A ,A,0.5)
 
         x = F.avg_pool2d(x, x.size()[2:])
         x = x.view(N, M, -1)

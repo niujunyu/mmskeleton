@@ -65,20 +65,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
             nn.Linear(n_hidden, n_output),
         )
-        self.attension = nn.Sequential(
-            nn.BatchNorm1d(n_feature),
-            nn.ReLU(inplace=True),
-
-            nn.Linear(n_feature, n_hidden),
-            nn.ReLU(inplace=True),
-            nn.Dropout(dropout_value),
-
-            nn.Linear(n_hidden, n_hidden),
-            nn.ReLU(inplace=True),
-            nn.Dropout(dropout_value),
-
-            nn.Linear(n_hidden, 300),
-        )
+    
 
 # 输出层线性输出
 
@@ -87,8 +74,8 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
         N, T, F = x.size()
         x = self.conv1(x)
         x = x.view(N ,-1)
-        a = self.attension(x).view(N,300)
         x = self.anet(x).view(N,-1)
+  
         splited_x,a=torch.split(x,[3*25*25,300],dim=1)
         splited_x=splited_x.view(N,3,25, 25)
         splited_x = torch.softmax(splited_x, dim=3)
@@ -100,8 +87,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
 
 
-
-class ST_GCN_NALN4(nn.Module):
+class ST_GCN_NALN3(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
@@ -161,16 +147,16 @@ class ST_GCN_NALN4(nn.Module):
             st_gcn_block(256, 256, kernel_size, 1, **kwargs),
         ))
 
-        self.edge_importance = nn.ParameterList([
-            nn.Parameter(torch.ones(spatial_kernel_size ,25,25))
-            for i in self.st_gcn_networks
-        ])
+    #    self.edge_importance = nn.ParameterList([
+    #        nn.Parameter(torch.ones(spatial_kernel_size ,25,25))
+    #        for i in self.st_gcn_networks
+     #   ])
         # # initialize parameters for edge importance weighting
 
 
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
-        self.ALN = ANet(375,1500, 625*3)
+        self.ALN = ANet(375,1200, 625*3+300)
         self.convm = torch.nn.Conv1d(in_channels=2, out_channels=1, kernel_size=1)
         self.convm.weight.requires_grad = False
 
@@ -192,18 +178,18 @@ class ST_GCN_NALN4(nn.Module):
         # input_ILN = x.mean(dim=2).view(N*M, -1)
         input_ILN = x.permute(0, 2, 1, 3).contiguous()
         input_ILN=input_ILN.view(N*M,T,C*V)
-
         A,a = self.ALN(input_ILN)
+ 
         A=A.cuda()
         a=a.cuda().view(N * M,300)
         v,i=torch.topk(a,100,1,False,True)
         kn=v[:,-1:]
         a[a<=kn]=0
+        a[a>kn]=1
         a=a.view(N * M,1,300,1)
-
         x=x*a
-        for gcn, importance in zip(self.st_gcn_networks, self.edge_importance):
-            x, _ = gcn(x, self.A * importance,A,0.5)
+        for gcn in self.st_gcn_networks:
+            x, _ = gcn(x, self.A ,A,0.5)
 
         x = F.avg_pool2d(x, x.size()[2:])
         x = x.view(N, M, -1)
