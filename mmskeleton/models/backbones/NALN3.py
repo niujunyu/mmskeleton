@@ -147,10 +147,10 @@ class ST_GCN_NALN3(nn.Module):
             st_gcn_block(256, 256, kernel_size, 1, **kwargs),
         ))
 
-       self.edge_importance = nn.ParameterList([
-           nn.Parameter(torch.ones(spatial_kernel_size ,25,25))
-           for i in self.st_gcn_networks
-       ])
+        self.edge_importance = nn.ParameterList([
+            nn.Parameter(torch.ones(spatial_kernel_size ,25,25))
+            for i in self.st_gcn_networks
+        ])
         # # initialize parameters for edge importance weighting
 
 
