@@ -181,12 +181,7 @@ class ST_GCN_NALN4(nn.Module):
         A,a = self.ALN(input_ILN)
  
         A=A.cuda()
-        a=a.cuda().view(N * M,300)
-        v,i=torch.topk(a,100,1,False,True)
-        kn=v[:,-1:]
-        a[a<=kn]=0
-        a[a>kn]=1
-        a=a.view(N * M,1,300,1)
+        a=a.view(N * M,1,300,1).cuda()
         x=x*a
         for gcn in self.st_gcn_networks:
             x, _ = gcn(x, self.A ,A,0.5)
