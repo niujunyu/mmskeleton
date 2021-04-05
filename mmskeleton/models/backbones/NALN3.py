@@ -181,7 +181,7 @@ class ST_GCN_NALN3(nn.Module):
         A,a = self.ALN(input_ILN)
  
         A=A.cuda()
-        a=a.cuda().view(N * M,300)
+        a=a.view(N * M,300)
         v,i=torch.topk(a,100,1,False,True)
         kn=v[:,-1:]
         a[a<=kn]=0
