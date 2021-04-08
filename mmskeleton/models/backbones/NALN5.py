@@ -43,7 +43,7 @@ class MyLeakyRelu(torch.autograd.function.Function):
     @staticmethod
     def backward(ctx, grad_output):
         result, = ctx.saved_tensors
-        return grad_output * result，None
+        return grad_output * result,None
 
 
 class ANet(torch.nn.Module):  # 继承 torch 的 Module
