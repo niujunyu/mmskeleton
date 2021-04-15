@@ -102,7 +102,7 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
 
 
-class ST_GCN_NALN7(nn.Module):
+class ST_GCN_NALN8(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
