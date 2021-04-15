@@ -205,7 +205,7 @@ class ST_GCN_NALN8(nn.Module):
         a=a.view(N * M,1,300,1).cuda()
         x=x*a
         for gcn, importance in zip(self.st_gcn_networks, self.edge_importance):
-            x, _ = gcn(x, self.A * importance)
+            x, _ = gcn(x, A * importance)
 
         x = F.avg_pool2d(x, x.size()[2:])
         x = x.view(N, M, -1)
