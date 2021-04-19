@@ -6,21 +6,11 @@ from torch.autograd import Variable
 from mmskeleton.ops.st_gcn import ConvTemporalGraphicalBatchA, Graph,ConvTemporalGraphicalTwoA
 
 """
-change from 36
-A矩阵对称版本  
-A  3*25*25
-a.triu  !!!!
-
-
-
-
-ast layer use softmax but other link do not set 1
-
-matrix A is a sparse matrix use a spacial way to do relu
-
-change the activate function to a new handed write function  
-debug leakyrelu
+NALN9  为了对比NALN7的效果
+不加蒙版 不使用帧注意力矩阵 
 """
+
+
 
 def zero(x):
     return 0
@@ -30,10 +20,9 @@ def iden(x):
     return x
 
 
-
 class MyLeakyRelu(torch.autograd.function.Function):
     @staticmethod
-    def forward(ctx, i ,limit):
+    def forward(ctx, i, limit):
         result = i.clone()
         result[result > limit] = 1
         result[result < limit] = 0.001
@@ -43,11 +32,12 @@ class MyLeakyRelu(torch.autograd.function.Function):
     @staticmethod
     def backward(ctx, grad_output):
         result, = ctx.saved_tensors
-        return grad_output * result,None
+        return grad_output * result, None
+
 
 class Mystep(torch.autograd.function.Function):
     @staticmethod
-    def forward(ctx, i ,limit):
+    def forward(ctx, i, limit):
         result = i.clone()
         result[result > limit] = 1
         result[result < limit] = 0.001
@@ -57,12 +47,11 @@ class Mystep(torch.autograd.function.Function):
     @staticmethod
     def backward(ctx, grad_output):
         result, = ctx.saved_tensors
-        return grad_output * result,None
-
+        return grad_output * result, None
 
 
 class ANet(torch.nn.Module):  # 继承 torch 的 Module
-    def __init__(self, n_feature, n_hidden, n_output,dropout_value=0.5):
+    def __init__(self, n_feature, n_hidden, n_output, dropout_value=0.5):
         super(ANet, self).__init__()  # 继承 __init__ 功能
         # 定义每层用什么样的形式
         self.conv1 = nn.Conv1d(in_channels=300, out_channels=5, kernel_size=1)
@@ -80,29 +69,25 @@ class ANet(torch.nn.Module):  # 继承 torch 的 Module
 
             nn.Linear(n_hidden, n_output),
         )
-    
 
-# 输出层线性输出
+    # 输出层线性输出
 
     def forward(self, x):  # 这同时也是 Module 中的 forward 功能
         # 正向传播输入值, 神经网络分析出输出值
         N, T, F = x.size()
         x = self.conv1(x)
-        x = x.view(N ,-1)
-        x = self.anet(x).view(N,-1)
-  
-        splited_x,a=torch.split(x,[3*25*25,300],dim=1)
-        splited_x=splited_x.view(N,3,25, 25)
+        x = x.view(N, -1)
+        x = self.anet(x).view(N, -1)
+
+        splited_x, a = torch.split(x, [3 * 25 * 25, 300], dim=1)
+        splited_x = splited_x.view(N, 3, 25, 25)
         splited_x = torch.softmax(splited_x, dim=3)
-        splited_x = MyLeakyRelu.apply(splited_x,0.1)
-        a=torch.sigmoid(a).view(N,300)
-        return splited_x,a
+        splited_x = MyLeakyRelu.apply(splited_x, 0.1)
+        a = torch.sigmoid(a).view(N, 300)
+        return splited_x, a
 
 
-
-
-
-class ST_GCN_NALN8(nn.Module):
+class ST_GCN_NALN9(nn.Module):
     r"""Spatial temporal graph convolutional networks.
 
     Args:
@@ -121,6 +106,7 @@ class ST_GCN_NALN8(nn.Module):
             :math:`V_{in}` is the number of graph nodes,
             :math:`M_{in}` is the number of instance in a frame.
     """
+
     def __init__(self,
                  in_channels,
                  num_class,
@@ -162,26 +148,25 @@ class ST_GCN_NALN8(nn.Module):
             st_gcn_block(256, 256, kernel_size, 1, **kwargs),
         ))
 
-        self.edge_importance = nn.ParameterList([
-           nn.Parameter(torch.ones(spatial_kernel_size ,25,25))
-           for i in self.st_gcn_networks
-        ])
+        #    self.edge_importance = nn.ParameterList([
+        #        nn.Parameter(torch.ones(spatial_kernel_size ,25,25))
+        #        for i in self.st_gcn_networks
+        #   ])
         # # initialize parameters for edge importance weighting
-
 
         # fcn for prediction
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
-        self.ALN = ANet(375,1200, 625*3+300)
+        self.ALN = ANet(375, 1200, 625 * 3 + 300)
         self.convm = torch.nn.Conv1d(in_channels=2, out_channels=1, kernel_size=1)
         self.convm.weight.requires_grad = False
 
         self.ones = torch.Tensor(torch.ones((1, 2, 1))).cuda()
         self.ones[0, 0, 0] = 0.5
         self.ones[0, 1, 0] = 0.5
+
     def forward(self, x):
         # data normalization
         N, C, T, V, M = x.size()
-
 
         x = x.permute(0, 4, 3, 1, 2).contiguous()
         x = x.view(N * M, V * C, T)
@@ -192,20 +177,20 @@ class ST_GCN_NALN8(nn.Module):
 
         # input_ILN = x.mean(dim=2).view(N*M, -1)
         input_ILN = x.permute(0, 2, 1, 3).contiguous()
-        input_ILN=input_ILN.view(N*M,T,C*V)
-        A,a = self.ALN(input_ILN)
-
-        A=A.cuda()
-
-        a=a.cuda().view(N * M,300)
-        v,i=torch.topk(a,100,1,False,True)
-        kn=v[:,-1:]
-        a = MyLeakyRelu.apply(a, kn)
-
-        a=a.view(N * M,1,300,1).cuda()
-        x=x*a
+        input_ILN = input_ILN.view(N * M, T, C * V)
+        A, a = self.ALN(input_ILN)
+        #
+        # A = A.cuda()
+        #
+        # a = a.cuda().view(N * M, 300)
+        # v, i = torch.topk(a, 100, 1, False, True)
+        # kn = v[:, -1:]
+        # a = MyLeakyRelu.apply(a, kn)
+        #
+        # a = a.view(N * M, 1, 300, 1).cuda()
+        # x = x * a
         for gcn in self.st_gcn_networks:
-            x, _ = gcn(x,A)
+            x, _ = gcn(x, A)
 
         x = F.avg_pool2d(x, x.size()[2:])
         x = x.view(N, M, -1)
@@ -216,7 +201,6 @@ class ST_GCN_NALN8(nn.Module):
         x = x.view(x.size(0), -1)
 
         return x
-
 
     def extract_feature(self, x):
 
@@ -231,7 +215,7 @@ class ST_GCN_NALN8(nn.Module):
 
         # forwad
         for gcn in self.st_gcn_networks:
-            x, _ = gcn(x, self.A )
+            x, _ = gcn(x, self.A)
 
         _, c, t, v = x.size()
         feature = x.view(N, M, c, t, v).permute(0, 2, 3, 4, 1)
@@ -241,7 +225,6 @@ class ST_GCN_NALN8(nn.Module):
         output = x.view(N, M, -1, t, v).permute(0, 2, 3, 4, 1)
 
         return output, feature
-
 
 
 class st_gcn_block(nn.Module):
@@ -264,6 +247,7 @@ class st_gcn_block(nn.Module):
             :math:`T_{in}/T_{out}` is a length of input/output sequence,
             :math:`V` is the number of graph nodes.
     """
+
     def __init__(self,
                  in_channels,
                  out_channels,
@@ -278,7 +262,7 @@ class st_gcn_block(nn.Module):
         padding = ((kernel_size[0] - 1) // 2, 0)
 
         self.gcn = ConvTemporalGraphicalBatchA(in_channels, out_channels,
-                                         kernel_size[1])
+                                               kernel_size[1])
 
         self.tcn = nn.Sequential(
             nn.BatchNorm2d(out_channels),

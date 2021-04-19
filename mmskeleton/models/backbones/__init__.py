@@ -88,5 +88,6 @@ from .NALN5 import ST_GCN_NALN5
 from .NALN6 import ST_GCN_NALN6
 from .NALN7 import ST_GCN_NALN7
 from .NALN8 import ST_GCN_NALN8
+from .NALN9 import ST_GCN_NALN9
 from .TSA1 import ST_GCN_TSA1
 from .hrnet import HRNet

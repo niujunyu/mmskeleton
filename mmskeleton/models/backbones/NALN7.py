@@ -6,20 +6,8 @@ from torch.autograd import Variable
 from mmskeleton.ops.st_gcn import ConvTemporalGraphicalBatchA, Graph,ConvTemporalGraphicalTwoA
 
 """
-change from 36
-A矩阵对称版本  
-A  3*25*25
-a.triu  !!!!
+生成帧注意力矩阵，但不加自带蒙版
 
-
-
-
-ast layer use softmax but other link do not set 1
-
-matrix A is a sparse matrix use a spacial way to do relu
-
-change the activate function to a new handed write function  
-debug leakyrelu
 """
 
 def zero(x):
